@@ -33,6 +33,10 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
 
     final val maxPublishedLinksPerType = 100
 
+    final val maxPublishedTweetsPerLink = 100
+
+    final val maxPublishedEntitiesPerEnd = 50
+
     @Scheduled(fixedDelay = 1000)
     fun sendMessage() {
         val featureCollection = buildFeatrureCollection(maxPublishedLinkAge, maxPublishedLinksPerType, maxPublishedLinksPerType)
@@ -186,14 +190,20 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         if (isIncludeFirst) {
             val firstHashTags = linkData.firstTags[TagType.HashTag]
             if (firstHashTags != null) {
-                featureHashTags.addAll(firstHashTags.values.map { "#${it.tagValue}" })
+                featureHashTags.addAll(firstHashTags.values
+                        .toList().asReversed()
+                        .take(maxPublishedEntitiesPerEnd)
+                        .map { "#${it.tagValue}" })
                 featureTweetList.addAll(firstHashTags.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
             val firstUserNames = linkData.firstTags[TagType.UserName]
             if (firstUserNames != null) {
-                featureUserNames.addAll(firstUserNames.values.map { "@${it.tagValue}" })
+                featureUserNames.addAll(firstUserNames.values
+                        .toList().asReversed()
+                        .take(maxPublishedEntitiesPerEnd)
+                        .map { "@${it.tagValue}" })
                 featureTweetList.addAll(firstUserNames.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
@@ -204,14 +214,20 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         if (isIncludeSecond) {
             val secondHashTags = linkData.secondTags[TagType.HashTag]
             if (secondHashTags != null) {
-                featureHashTags.addAll(secondHashTags.values.map { "#${it.tagValue}" })
+                featureHashTags.addAll(secondHashTags.values
+                        .toList().asReversed()
+                        .take(maxPublishedEntitiesPerEnd)
+                        .map { "#${it.tagValue}" })
                 featureTweetList.addAll(secondHashTags.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
             val secondUserNames = linkData.secondTags[TagType.UserName]
             if (secondUserNames != null) {
-                featureUserNames.addAll(secondUserNames.values.map { "@${it.tagValue}" })
+                featureUserNames.addAll(secondUserNames.values
+                        .toList().asReversed()
+                        .take(maxPublishedEntitiesPerEnd)
+                        .map { "@${it.tagValue}" })
                 featureTweetList.addAll(secondUserNames.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
@@ -219,10 +235,13 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         }
 
         featureTweetList.sortByDescending { it.second }
-        val featureTweetIds = LinkedHashSet(featureTweetList.map { it.first })
+        val featureTweetIds = LinkedHashSet(
+                featureTweetList
+                        .take(maxPublishedTweetsPerLink)
+                        .map { it.first })
 
         // tweets
-        val featureTweets: List<String> = featureTweetIds.toList()
+        val featureTweets: List<String> = featureTweetIds
                 .map { it.toString() }
 
         // media
