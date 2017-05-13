@@ -162,6 +162,6 @@ These polygons are stored in a shapefile referenced in the `application.yml` fil
 - [GeoTools](http://www.geotools.org/)
 
 ## Other
+- [Twitter Developer Docs](https://dev.twitter.com/docs)
 - [NaturalEarth Populated Places](http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-populated-places/)
 - [qGIS](http://www.qgis.org)
-- [Twitter Developer Docs](https://dev.twitter.com/docs)
