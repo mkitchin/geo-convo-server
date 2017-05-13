@@ -1,0 +1,38 @@
+# Go here to create a Twitter app and get these tokens:
+# https://apps.twitter.com/
+twitter:
+  consumer:
+    key: <your-app-consumer-key>
+    secret: <your-app-consumer-secret>
+  access:
+    token: <your-user-access-token>
+    secret: <your-user-access-secret>
+
+links:
+  search:
+    mode: places
+
+trends:
+  limits:
+    query:
+      places: 70
+      terms: 200
+    tracking:
+      terms: 1000
+
+place:
+  buffer:
+    name: place-buffers-1
+    path: data/geo/place-buffers-1.shp
+
+security:
+  user:
+    name: admin
+    password: admin123!
+  basic:
+    enabled: false
+
+management:
+  security:
+    enabled: true
+    roles: ADMIN
