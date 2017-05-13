@@ -102,7 +102,7 @@ Username/password are specified in the `application.yml` file, referenced above.
 
 Example:
 
-```Json
+```Javascript
 {
   "mem": 1499474,
   "mem.free": 678824,
