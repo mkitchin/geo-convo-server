@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Twitter trends service.
  *
- * Created by mkitchin on 4/22/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 @Service
 class TrendsService(val twitterService: TwitterService,

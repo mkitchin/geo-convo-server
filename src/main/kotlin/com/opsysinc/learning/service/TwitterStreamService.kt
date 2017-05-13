@@ -13,7 +13,7 @@ import javax.annotation.PostConstruct
 /**
  * Twitter listener service.
  *
- * Created by mkitchin on 4/10/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 @Service
 class TwitterStreamService {

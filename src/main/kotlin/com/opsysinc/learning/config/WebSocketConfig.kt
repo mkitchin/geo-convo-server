@@ -9,7 +9,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 /**
  * Websocket config.
  *
- * Created by mkitchin on 4/27/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 @Configuration
 @EnableWebSocketMessageBroker

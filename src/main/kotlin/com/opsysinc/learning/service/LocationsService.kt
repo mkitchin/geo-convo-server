@@ -22,7 +22,7 @@ import kotlin.collections.LinkedHashSet
 /**
  * Place index service.`
  *
- * Created by mkitchin on 4/23/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 @Service
 class LocationsService(val counterService: CounterService) {

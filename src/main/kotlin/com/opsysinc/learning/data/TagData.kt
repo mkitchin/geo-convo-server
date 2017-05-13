@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Tag data.
  *
- * Created by mkitchin on 4/27/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 data class TagData(val id: String,
                    val tagType: TagType,

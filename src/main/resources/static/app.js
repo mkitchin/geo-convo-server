@@ -1,3 +1,8 @@
+/**
+ * Main client code :)
+ *
+ * Created by mkitchin on 5/13/2017.
+ */
 // Go here to create a Mapbox account and get this token:
 // https://www.mapbox.com/signup/
 let mapboxAccessToken = '<your-mapbox-access-token>';

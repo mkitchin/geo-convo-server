@@ -5,7 +5,7 @@ import java.util.*
 /**
  * GeoJSON feature collection.
  *
- * Created by mkitchin on 4/27/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 data class FeatureCollection(val type: String = "FeatureCollection",
                              val features: MutableList<Feature>

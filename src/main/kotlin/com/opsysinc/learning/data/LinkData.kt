@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Conversation data.
  *
- * Created by mkitchin on 4/24/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 data class LinkData(
         val id: String,

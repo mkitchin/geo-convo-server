@@ -7,6 +7,11 @@ import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Controller
 
+/**
+ * App controller.
+ *
+ * Created by mkitchin on 5/13/2017.
+ */
 @Controller
 open class AppController(val simpMessagingTemplate: SimpMessagingTemplate,
                          val publisherService: PublisherService,

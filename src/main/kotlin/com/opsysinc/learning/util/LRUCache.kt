@@ -3,7 +3,7 @@ package com.opsysinc.learning.util
 /**
  * Simple LRU cache impl.
  *
- * Created by mkitchin on 4/23/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 class LRUCache<K, V>(val capacity: Int) :
         LinkedHashMap<K, V>(16, 0.75f, true) {

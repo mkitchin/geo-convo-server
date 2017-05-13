@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Status service.
  *
- * Created by mkitchin on 4/24/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 @Service
 class StatusService(val twitterServce: TwitterService,

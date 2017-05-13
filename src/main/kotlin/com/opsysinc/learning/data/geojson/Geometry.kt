@@ -5,7 +5,7 @@ import java.util.*
 /**
  * Geometry class.
  *
- * Created by mkitchin on 4/27/2017.
+ * Created by mkitchin on 5/13/2017.
  */
 data class Geometry(var type: String = "Point",
                     val coordinates: MutableList<Any>
