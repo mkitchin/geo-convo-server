@@ -2,6 +2,8 @@
 Twitter conversation scanning and mapping tool, made with SpringBoot, Kotlin, OpenLayers3 and jQuery Mobile.
 
 Uses websockets for continuous, low-overhead updates and geospatial bucketing for (somewhat) decluttered presentation.
+
+This is POC-level code (hence, shit for comments).
 # Features
 In terms of the UX:
 ![alt text](doc/main-ux-1.png "Main UX #1")
@@ -23,14 +25,14 @@ Ensure both are in your working path.
 
 ## Create Twitter App
 
-You'll need to [create a Twitter app](https://apps.twitter.com/), then get app and user keys/secrets in order to build or run the software.
+You'll need to [create a Twitter app](https://apps.twitter.com/) (quick/free), then get app and user keys/secrets in order to build or run the software.
 
 Twitter app management page with the important parts highlighted:
 ![alt text](doc/twitter-app-setup-1.png "Twitter app setup #1")
 
 ## Create Mabpox Account
  
-You'll need to [create a Mapbox account](https://www.mapbox.com/signup/), then get a public token to run the software.  
+You'll need to [create a Mapbox account](https://www.mapbox.com/signup/) (quick/free), then get a public token to run the software.  
 
 Mapbox account management page with the important parts highlighted:
 ![alt text](doc/mapbox-account-setup-1.png "Mapbox account setup #1")
