@@ -90,7 +90,53 @@ Navigate to the following URL:
 http://localhost:8080
 ```
 
-If all tokens/secrets have been set correctly, the map will be visible and coversations will begin to appear within a minute (expect >60min, bandwidth depending).
+If all tokens/secrets have been set correctly, the map will be visible and coversations will begin to appear within a minute (expect >60/min, bandwidth depending).
+
+# Metrics
+Metrics (e.g., total received Tweets) in JSON form may be obtained via the following URL:
+```Bash
+http://localhost:8080/metrics
+```
+
+Username/password are specified in the `application.yml` file, referenced above.
+
+Example:
+
+```Json
+{
+  "mem": 1499474,
+  "mem.free": 678824,
+  "processors": 12,
+  "instance.uptime": 771214,
+  
+// [...]
+
+  "counter.services.publisher.points.published": 1654,
+  "counter.services.links.tweets.new": 37434,
+  "counter.services.status.request.enqueued": 9255,
+  "counter.services.location.features.known": 1243,
+  "counter.services.links.tweets.replies": 5605,
+  "counter.services.trends.requests.trends": 77,
+  "counter.services.links.tweets.source.location.known": 36604,
+  "counter.services.links.tweets.target.location.unknown": 1014,
+  "counter.services.locations.total.known": 12619,
+  "counter.services.twitter.limit.waits": 1,
+  "counter.services.status.request.loaded": 873,
+  "counter.services.appcontroller.requests.startup": 2,
+  "counter.services.links.tweets.source.location.unknown": 830,
+  "counter.services.publisher.messages.published": 486,
+  "counter.services.links.tweets.duplicate": 435,
+  "counter.services.status.request.cached": 9731,
+  "counter.services.links.total.known": 58,
+  "counter.services.links.tweets.target.location.known": 336,
+  "counter.services.publisher.ends.published": 200,
+  "counter.services.publisher.links.published": 100,
+  "counter.services.links.tweets.chained": 14,
+  "counter.services.links.tweets.quotes.1": 4126,
+  "counter.services.links.total.unknown": 374,
+  "counter.services.trends.requests.places": 2
+}
+```
 
 # Geospatial Bucketing
 In an effort to collate Tweets to/from from approximate locations I used the Natural Earth Populated Places dataset and qGIS to generate the following Voronoi (Thiessen) polygons:
