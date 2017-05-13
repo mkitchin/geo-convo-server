@@ -5,7 +5,7 @@
  */
 // Go here to create a Mapbox account and get this token:
 // https://www.mapbox.com/signup/
-let mapboxAccessToken = '<your-mapbox-access-token>';
+let mapboxAccessToken = '<your-mapbox-token>';
 let mapboxStyleName = 'traffic-night-v2';
 let sockJs = null;
 let stompClient = null;
@@ -83,6 +83,7 @@ let featureCaches = {
     'point': new LRUMap(maxFeaturesPerType)
 };
 
+let twitterSearchUriBase = "https://twitter.com/search?q=";
 let highlightedUserNames = new Set();
 let highlightedHashTags = new Set();
 let highlightedFeatures = new Map();
@@ -901,12 +902,20 @@ function showTooltipPopup(nextFeature, coordinate) {
         htmlText += ('<tr><td align="center">');
         if (hashTagArray.length > 0) {
             for (let nextHashTag of hashTagArray) {
-                htmlText += ('<div class="hashtag-label">' + nextHashTag + '</div>');
+                htmlText +=
+                    ('<div class="hashtag-label"><a target="_blank" href="'
+                    + twitterSearchUriBase
+                    + encodeURIComponent(nextHashTag) + '">'
+                    + nextHashTag + '</a></div>');
             }
         }
         if (userNameArray.length > 0) {
-            for (let nextHashTag of userNameArray) {
-                htmlText += ('<div class="username-label">' + nextHashTag + '</div>');
+            for (let nextUserName of userNameArray) {
+                htmlText +=
+                    ('<div class="username-label"><a target="_blank" href="'
+                    + twitterSearchUriBase
+                    + encodeURIComponent(nextUserName) + '">'
+                    + nextUserName + '</a></div>');
             }
         }
         htmlText += ('</td></tr>');

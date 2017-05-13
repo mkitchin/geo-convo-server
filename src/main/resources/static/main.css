@@ -6,6 +6,11 @@ body {
     padding: 0;
 }
 
+a:link, a:visited, a:active, a:hover {
+    color: #111;
+    text-decoration: none;
+}
+
 .ol-popup-large {
     padding: 20px;
     border-radius: 20px;
