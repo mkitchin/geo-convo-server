@@ -1,7 +1,7 @@
 package com.opsysinc.learning.data
 
 import twitter4j.Trend
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Trend data class.
@@ -11,5 +11,5 @@ import java.util.concurrent.atomic.AtomicInteger
 data class TrendData(
         var name: String,
         var trend: Trend,
-        val count: AtomicInteger = AtomicInteger(0)
+        val count: AtomicLong = AtomicLong(0L)
 )

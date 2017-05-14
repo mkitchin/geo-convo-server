@@ -9,8 +9,9 @@ import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import twitter4j.User
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Publisher service.
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
 @Service
 class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                        val linkService: LinkService,
-                       val statusService: StatusService,
+                       val userService: UserService,
                        val counterService: CounterService) {
     /**
      * Logger.
@@ -64,7 +65,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     linkService.allKnownLinkCache.values
                             .toList().asReversed()
                 }
-        val knownFeatureCtr = AtomicInteger(0)
+        val knownFeatureCtr = AtomicLong(0L)
 
         run knownLinks@ {
             knownLinks.forEach { linkItem ->
@@ -135,7 +136,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     linkService.allUnknownLinkCache.values
                             .toList().asReversed()
                 }
-        val unknownFeatureCtr = AtomicInteger(0)
+        val unknownFeatureCtr = AtomicLong(0L)
 
         run unknownLinks@ {
             unknownLinks.forEach { linkItem ->
@@ -235,31 +236,21 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         }
 
         featureTweetList.sortByDescending { it.second }
-        val featureTweetIds = LinkedHashSet(
-                featureTweetList
-                        .take(maxPublishedTweetsPerLink)
-                        .map { it.first })
 
         // tweets
-        val featureTweets: List<String> = featureTweetIds
-                .map { it.toString() }
+        val featureTweets = LinkedHashSet(
+                featureTweetList
+                        .take(maxPublishedTweetsPerLink)
+                        .map { it.first.toString() })
 
         // media
-        val featureMedia: SortedMap<String, Array<String>> = sortedMapOf()
-        featureTweetIds
-                .forEach {
-                    val featureStatus = statusService.getStatus(it)
-                    if (featureStatus != null
-                            && featureStatus.user.profileImageURL != null
-                            && !featureStatus.user.profileImageURL.isEmpty()) {
-                        if (!featureMedia.containsKey(featureStatus.user.screenName)) {
-                            featureMedia.put(
-                                    featureStatus.user.screenName,
-                                    arrayOf(featureStatus.user.profileImageURL,
-                                            (userProfileUrlPrefix + featureStatus.user.screenName),
-                                            ("@" + featureStatus.user.screenName)))
-                        }
-                    }
+        val featureMedia = featureUserNames
+                .map { userService.getUserByScreenName(it) }
+                .filterNotNull()
+                .map {
+                    arrayOf(it.profileImageURL,
+                            (userProfileUrlPrefix + it.screenName),
+                            ("@" + it.screenName))
                 }
 
         // places
@@ -270,7 +261,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         linkFeature.properties.put("hashtags", featureHashTags)
         linkFeature.properties.put("usernames", featureUserNames)
         linkFeature.properties.put("tweets", featureTweets)
-        linkFeature.properties.put("media", featureMedia.values)
+        linkFeature.properties.put("media", featureMedia)
         linkFeature.properties.put("places", featurePlaces)
     }
 }

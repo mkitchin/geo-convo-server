@@ -9,7 +9,7 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Status service.
@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 @Service
 class StatusService(val twitterServce: TwitterService,
+                    val userService: UserService,
                     val counterService: CounterService) {
     /**
      * Logger.
@@ -34,7 +35,7 @@ class StatusService(val twitterServce: TwitterService,
 
     val statusCache = Collections.synchronizedMap(LRUCache<Long, Status>(maxCachedStatus))
 
-    val statusCtr = AtomicInteger(0)
+    val statusCtr = AtomicLong(0L)
 
     fun addStatus(newStatus: Status) {
         statusCache.put(newStatus.id, newStatus)
@@ -68,15 +69,19 @@ class StatusService(val twitterServce: TwitterService,
                         val twitter = twitterServce.getTwitterClient()
                         synchronized(twitterServce.getResourceLock("statuses", "/statuses/show/:id")) {
                             twitterServce.checkRateLimiting("statuses", "/statuses/show/:id")
-                            toStatus2 = twitter.tweets().showStatus(statusId)
+                            toStatus2 = twitter.showStatus(statusId)
                         }
                         counterService.increment("services.status.request.loaded")
                         val statusTotal = statusCtr.incrementAndGet()
-                        if ((statusTotal % 100) == 0) {
+                        if ((statusTotal % 100L) == 0L) {
                             logger.info("getOrLoadStatus() - status total: $statusTotal")
                         }
-                        if (toStatus2 != null) {
-                            statusCache.put(toStatus2!!.id, toStatus2)
+                        val toStatus3: Status? = toStatus2
+                        if (toStatus3 != null) {
+                            statusCache.put(toStatus3.id, toStatus3)
+                            if (toStatus3.user != null) {
+                                userService.addUser(toStatus3.user)
+                            }
                         }
                     }
                     consumer(toStatus2)

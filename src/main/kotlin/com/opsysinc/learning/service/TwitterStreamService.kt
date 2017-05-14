@@ -3,7 +3,6 @@ package com.opsysinc.learning.service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import twitter4j.FilterQuery
 import twitter4j.TwitterStream
 import twitter4j.TwitterStreamFactory
 import twitter4j.conf.ConfigurationBuilder

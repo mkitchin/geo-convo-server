@@ -7,7 +7,7 @@ import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 
 /**
@@ -53,7 +53,7 @@ class TrendsService(val twitterService: TwitterService,
             // Step 1: Get trending places
             twitterService.checkRateLimiting("trends", "/trends/available", 0L, 1)
             counterService.increment("services.trends.requests.places")
-            val availablePlaces = twitter.trends().availableTrends
+            val availablePlaces = twitter.availableTrends
 
             val sortedPlaces = availablePlaces.filter {
                 it.placeName.equals("supername", true)
@@ -70,7 +70,7 @@ class TrendsService(val twitterService: TwitterService,
             val trendMap = sortedMapOf<String, TrendData>()
             for (location in finalPlaces) {
                 counterService.increment("services.trends.requests.trends")
-                val trends = twitter.trends().getPlaceTrends(location.woeid)
+                val trends = twitter.getPlaceTrends(location.woeid)
 
                 logger.info("trends (${trends.trends.size}): $trends")
                 val multiplier =
@@ -88,15 +88,15 @@ class TrendsService(val twitterService: TwitterService,
                 val increment =
                         if (location.placeName.equals("supername", true)
                                 || location.placeName.equals("country", true)) {
-                            (100 * multiplier)
+                            (100L * multiplier)
                         } else {
-                            (1 * multiplier)
+                            (1L * multiplier)
                         }
 
                 trends.trends
                         .map {
                             trendMap.computeIfAbsent(it.name, { key ->
-                                TrendData(key, it, AtomicInteger(0))
+                                TrendData(key, it, AtomicLong(0L))
                             })
                         }
                         .forEach {

@@ -2,7 +2,6 @@ package com.opsysinc.learning.data
 
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -20,8 +19,8 @@ data class LinkData(
         = AtomicLong(0L),
         val expired: AtomicBoolean
         = AtomicBoolean(false),
-        val hitCtr: AtomicInteger
-        = AtomicInteger(0),
+        val hitCtr: AtomicLong
+        = AtomicLong(0L),
         val firstTags: MutableMap<TagType, MutableMap<String, TagData>>
         = Collections.synchronizedMap(EnumMap(TagType::class.java)),
         val secondTags: MutableMap<TagType, MutableMap<String, TagData>>

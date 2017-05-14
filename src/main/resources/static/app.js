@@ -83,7 +83,7 @@ let featureCaches = {
     'point': new LRUMap(maxFeaturesPerType)
 };
 
-let twitterSearchUriBase = "https://twitter.com/search?q=";
+let twitterSearchUriPrefix = "https://twitter.com/search?q=";
 let highlightedUserNames = new Set();
 let highlightedHashTags = new Set();
 let highlightedFeatures = new Map();
@@ -904,7 +904,7 @@ function showTooltipPopup(nextFeature, coordinate) {
             for (let nextHashTag of hashTagArray) {
                 htmlText +=
                     ('<div class="hashtag-label"><a target="_blank" href="'
-                    + twitterSearchUriBase
+                    + twitterSearchUriPrefix
                     + encodeURIComponent(nextHashTag) + '">'
                     + nextHashTag + '</a></div>');
             }
@@ -913,7 +913,7 @@ function showTooltipPopup(nextFeature, coordinate) {
             for (let nextUserName of userNameArray) {
                 htmlText +=
                     ('<div class="username-label"><a target="_blank" href="'
-                    + twitterSearchUriBase
+                    + twitterSearchUriPrefix
                     + encodeURIComponent(nextUserName) + '">'
                     + nextUserName + '</a></div>');
             }

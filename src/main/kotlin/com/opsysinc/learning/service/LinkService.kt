@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 import twitter4j.FilterQuery
 import twitter4j.Status
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import javax.annotation.PostConstruct
 
 
@@ -26,6 +26,7 @@ class LinkService(
         val twitterStreamService: TwitterStreamService,
         val locationsService: LocationsService,
         val statusService: StatusService,
+        val userService: UserService,
         val counterService: CounterService) {
     /**
      * Logger.
@@ -39,7 +40,7 @@ class LinkService(
     @Value("\${links.search.mode}")
     var linksSearchMode: String? = null
 
-    val messageCtr = AtomicInteger(0)
+    val messageCtr = AtomicLong(0L)
 
     val allKnownLinkCache = Collections.synchronizedMap(LRUCache<String, LinkData>(maxCachedLinks))
 
@@ -51,7 +52,7 @@ class LinkService(
 
     val finishedStatusCache = Collections.synchronizedSet(Collections.newSetFromMap(LRUCache<Long, Boolean>(maxCachedFinishedStatus)))
 
-    val statusCtr = AtomicInteger(0)
+    val statusCtr = AtomicLong(0L)
 
     @PostConstruct
     fun postConstruct() {
@@ -81,12 +82,15 @@ class LinkService(
         finishedStatusCache.add(status.id)
 
         val statusTotal = statusCtr.incrementAndGet()
-        if ((statusTotal % 1000) == 0) {
+        if ((statusTotal % 1000L) == 0L) {
             logger.info("handleStatus() - status total: $statusTotal")
         }
 
         messageCtr.incrementAndGet()
         statusService.addStatus(status)
+        if (status.user != null) {
+            userService.addUser(status.user)
+        }
 
         val statusLocation = locationsService.getLocationByStatus(status)
         if (statusLocation == null) {
