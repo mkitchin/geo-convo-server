@@ -39,6 +39,9 @@ class StatusService(val twitterServce: TwitterService,
 
     fun addStatus(newStatus: Status) {
         statusCache.put(newStatus.id, newStatus)
+        if (newStatus.user != null) {
+            userService.addUser(newStatus.user)
+        }
     }
 
     fun getStatus(statusId: Long): Status? {
@@ -52,8 +55,11 @@ class StatusService(val twitterServce: TwitterService,
                 if (isToForce) {
                     null
                 } else {
-                    counterService.increment("services.status.request.cached")
-                    statusCache[statusId]
+                    val cachedStatus = statusCache[statusId]
+                    if (cachedStatus != null) {
+                        counterService.increment("services.status.request.cached")
+                    }
+                    cachedStatus
                 }
         if (toStatus1 == null) {
             counterService.increment("services.status.request.enqueued")
@@ -63,7 +69,11 @@ class StatusService(val twitterServce: TwitterService,
                             if (isToForce) {
                                 null
                             } else {
-                                statusCache[statusId]
+                                val cachedStatus = statusCache[statusId]
+                                if (cachedStatus != null) {
+                                    counterService.increment("services.status.request.cached")
+                                }
+                                cachedStatus
                             }
                     if (toStatus2 == null) {
                         val twitter = twitterServce.getTwitterClient()
@@ -71,17 +81,14 @@ class StatusService(val twitterServce: TwitterService,
                             twitterServce.checkRateLimiting("statuses", "/statuses/show/:id")
                             toStatus2 = twitter.showStatus(statusId)
                         }
-                        counterService.increment("services.status.request.loaded")
-                        val statusTotal = statusCtr.incrementAndGet()
-                        if ((statusTotal % 100L) == 0L) {
-                            logger.info("getOrLoadStatus() - status total: $statusTotal")
-                        }
                         val toStatus3: Status? = toStatus2
                         if (toStatus3 != null) {
-                            statusCache.put(toStatus3.id, toStatus3)
-                            if (toStatus3.user != null) {
-                                userService.addUser(toStatus3.user)
+                            val statusTotal = statusCtr.incrementAndGet()
+                            if ((statusTotal % 100L) == 0L) {
+                                logger.info("getOrLoadStatus() - status total: $statusTotal")
                             }
+                            counterService.increment("services.status.request.loaded")
+                            addStatus(toStatus3)
                         }
                     }
                     consumer(toStatus2)

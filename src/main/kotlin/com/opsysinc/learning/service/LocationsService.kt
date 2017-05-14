@@ -128,6 +128,7 @@ class LocationsService(val counterService: CounterService) {
         return filterCache.computeIfAbsent(
                 ecqlFilterText,
                 { inputCacheKey ->
+                    counterService.increment("services.location.filters")
                     ECQL.toFilter(inputCacheKey)
                 })
     }

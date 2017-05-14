@@ -40,8 +40,6 @@ class LinkService(
     @Value("\${links.search.mode}")
     var linksSearchMode: String? = null
 
-    val messageCtr = AtomicLong(0L)
-
     val allKnownLinkCache = Collections.synchronizedMap(LRUCache<String, LinkData>(maxCachedLinks))
 
     val updatedKnownLinkCache = Collections.synchronizedMap(LRUCache<String, LinkData>(maxCachedLinks))
@@ -78,7 +76,6 @@ class LinkService(
             counterService.increment("services.links.tweets.duplicate");
             return
         }
-        counterService.increment("services.links.tweets.new");
         finishedStatusCache.add(status.id)
 
         val statusTotal = statusCtr.incrementAndGet()
@@ -86,11 +83,8 @@ class LinkService(
             logger.info("handleStatus() - status total: $statusTotal")
         }
 
-        messageCtr.incrementAndGet()
+        counterService.increment("services.links.tweets.new");
         statusService.addStatus(status)
-        if (status.user != null) {
-            userService.addUser(status.user)
-        }
 
         val statusLocation = locationsService.getLocationByStatus(status)
         if (statusLocation == null) {
