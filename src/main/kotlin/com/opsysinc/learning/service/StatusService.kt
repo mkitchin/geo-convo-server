@@ -42,6 +42,14 @@ class StatusService(val twitterServce: TwitterService,
         if (newStatus.user != null) {
             userService.addUser(newStatus.user)
         }
+        if (newStatus.retweetedStatus != null
+                && newStatus.retweetedStatus.user != null) {
+            userService.addUser(newStatus.retweetedStatus.user)
+        }
+        if (newStatus.quotedStatus != null
+                && newStatus.quotedStatus.user != null) {
+            userService.addUser(newStatus.quotedStatus.user)
+        }
     }
 
     fun getStatus(statusId: Long): Status? {
