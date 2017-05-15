@@ -4,6 +4,7 @@ import com.opsysinc.learning.util.LRUCache
 import org.slf4j.LoggerFactory
 import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.stereotype.Service
+import twitter4j.Status
 import twitter4j.User
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
@@ -43,6 +44,20 @@ class UserService(val twitterServce: TwitterService,
         userByScreenNameCache.put(newUser.screenName, newUser)
     }
 
+    fun addUsersByStatus(newStatus: Status) {
+        if (newStatus.user != null) {
+            addUser(newStatus.user)
+        }
+        if (newStatus.retweetedStatus != null
+                && newStatus.retweetedStatus.user != null) {
+            addUser(newStatus.retweetedStatus.user)
+        }
+        if (newStatus.quotedStatus != null
+                && newStatus.quotedStatus.user != null) {
+            addUser(newStatus.quotedStatus.user)
+        }
+    }
+
     fun getUserById(userId: Long): User? {
         val foundUser: User? = userByIdCache[userId]
         if (foundUser != null) {
@@ -70,18 +85,25 @@ class UserService(val twitterServce: TwitterService,
                 if (isToForce) {
                     null
                 } else {
-                    counterService.increment("services.user.request.cached")
-                    userByIdCache[userId]
+                    val cachedUser = getUserById(userId)
+                    if (cachedUser != null) {
+                        counterService.increment("services.users.request.cached")
+                    }
+                    cachedUser
                 }
         if (toUser1 == null) {
-            counterService.increment("services.user.request.enqueued")
+            counterService.increment("services.users.request.enqueued")
             lookupExecutor.submit({
                 try {
                     var toUser2: User? =
                             if (isToForce) {
                                 null
                             } else {
-                                userByIdCache[userId]
+                                val cachedUser = getUserById(userId)
+                                if (cachedUser != null) {
+                                    counterService.increment("services.users.request.cached")
+                                }
+                                cachedUser
                             }
                     if (toUser2 == null) {
                         val twitter = twitterServce.getTwitterClient()
@@ -89,13 +111,14 @@ class UserService(val twitterServce: TwitterService,
                             twitterServce.checkRateLimiting("users", "/users/show/:id")
                             toUser2 = twitter.showUser(userId)
                         }
-                        counterService.increment("services.user.request.loaded")
-                        val userTotal = userCtr.incrementAndGet()
-                        if ((userTotal % 100L) == 0L) {
-                            logger.info("getOrLoadUser() - user total: $userTotal")
-                        }
-                        if (toUser2 != null) {
-                            userByIdCache.put(toUser2!!.id, toUser2)
+                        val toUser3: User? = toUser2
+                        if (toUser3 != null) {
+                            val userTotal = userCtr.incrementAndGet()
+                            if ((userTotal % 100L) == 0L) {
+                                logger.info("getOrLoadUser() - users total: $userTotal")
+                            }
+                            counterService.increment("services.users.request.loaded")
+                            addUser(toUser3)
                         }
                     }
                     consumer(toUser2)

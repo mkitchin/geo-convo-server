@@ -37,18 +37,12 @@ class StatusService(val twitterServce: TwitterService,
 
     val statusCtr = AtomicLong(0L)
 
-    fun addStatus(newStatus: Status) {
+    fun addStatus(newStatus: Status,
+                  isCacheOther: Boolean = false) {
         statusCache.put(newStatus.id, newStatus)
-        if (newStatus.user != null) {
-            userService.addUser(newStatus.user)
-        }
-        if (newStatus.retweetedStatus != null
-                && newStatus.retweetedStatus.user != null) {
-            userService.addUser(newStatus.retweetedStatus.user)
-        }
-        if (newStatus.quotedStatus != null
-                && newStatus.quotedStatus.user != null) {
-            userService.addUser(newStatus.quotedStatus.user)
+
+        if (isCacheOther) {
+            userService.addUsersByStatus(newStatus)
         }
     }
 
@@ -58,12 +52,13 @@ class StatusService(val twitterServce: TwitterService,
 
     fun getOrLoadStatus(statusId: Long,
                         isToForce: Boolean,
-                        consumer: (Status?) -> Unit) {
+                        consumer: (Status?) -> Unit,
+                        isCacheOther: Boolean = false) {
         val toStatus1: Status? =
                 if (isToForce) {
                     null
                 } else {
-                    val cachedStatus = statusCache[statusId]
+                    val cachedStatus = getStatus(statusId)
                     if (cachedStatus != null) {
                         counterService.increment("services.status.request.cached")
                     }
@@ -77,7 +72,7 @@ class StatusService(val twitterServce: TwitterService,
                             if (isToForce) {
                                 null
                             } else {
-                                val cachedStatus = statusCache[statusId]
+                                val cachedStatus = getStatus(statusId)
                                 if (cachedStatus != null) {
                                     counterService.increment("services.status.request.cached")
                                 }
@@ -96,7 +91,7 @@ class StatusService(val twitterServce: TwitterService,
                                 logger.info("getOrLoadStatus() - status total: $statusTotal")
                             }
                             counterService.increment("services.status.request.loaded")
-                            addStatus(toStatus3)
+                            addStatus(toStatus3, isCacheOther)
                         }
                     }
                     consumer(toStatus2)

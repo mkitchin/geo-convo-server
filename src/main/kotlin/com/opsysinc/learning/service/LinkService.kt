@@ -144,6 +144,9 @@ class LinkService(
             counterService.increment("services.links.tweets.target.location.known");
         }
 
+        userService.addUsersByStatus(fromStatus)
+        userService.addUsersByStatus(toStatus)
+
         val foundLink = getOrCreateLinkData(workFromLocation, workToLocation)
         foundLink.updatedOn.set(nowTime)
         foundLink.hitCtr.incrementAndGet()
