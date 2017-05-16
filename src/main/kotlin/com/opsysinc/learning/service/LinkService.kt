@@ -84,9 +84,8 @@ class LinkService(
         }
 
         counterService.increment("services.links.tweets.new");
-        statusService.addStatus(status)
-
         val statusLocation = locationsService.getLocationByStatus(status)
+
         if (statusLocation == null) {
             counterService.increment("services.links.tweets.source.location.unknown");
         } else {
@@ -96,28 +95,30 @@ class LinkService(
                 counterService.increment("services.links.tweets.replies");
                 statusService.getOrLoadStatus(status.inReplyToStatusId, false, { newToStatus ->
                     handleLink(status, statusLocation, newToStatus, null, chainCtr)
-                })
+                }, true, true)
             }
 
             // Step 2: Retweet
             if (status.retweetedStatus != null) {
                 counterService.increment("services.links.tweets.retweets");
-                statusService.getOrLoadStatus(status.retweetedStatus.id, false, { newToStatus ->
+                handleLink(status, statusLocation, status.retweetedStatus, null, chainCtr)
+                statusService.getOrLoadStatus(status.retweetedStatus.id, true, { newToStatus ->
                     handleLink(status, statusLocation, newToStatus, null, chainCtr)
-                })
+                }, true, true)
             }
 
             // Step 3: Quote
             if (status.quotedStatus != null) {
                 counterService.increment("services.links.tweets.quotes.1");
-                statusService.getOrLoadStatus(status.quotedStatus.id, false, { newToStatus ->
+                handleLink(status, statusLocation, status.quotedStatus, null, chainCtr)
+                statusService.getOrLoadStatus(status.quotedStatus.id, true, { newToStatus ->
                     handleLink(status, statusLocation, newToStatus, null, chainCtr)
-                })
+                }, true, true)
             } else if (status.quotedStatusId != -1L) {
                 counterService.increment("services.links.tweets.quotes.2");
                 statusService.getOrLoadStatus(status.quotedStatusId, false, { newToStatus ->
                     handleLink(status, statusLocation, newToStatus, null, chainCtr)
-                })
+                }, true, true)
             }
         }
     }
@@ -144,8 +145,8 @@ class LinkService(
             counterService.increment("services.links.tweets.target.location.known");
         }
 
-        userService.addUsersByStatus(fromStatus)
-        userService.addUsersByStatus(toStatus)
+        statusService.addStatus(fromStatus, true, true)
+        statusService.addStatus(toStatus, true, true)
 
         val foundLink = getOrCreateLinkData(workFromLocation, workToLocation)
         foundLink.updatedOn.set(nowTime)

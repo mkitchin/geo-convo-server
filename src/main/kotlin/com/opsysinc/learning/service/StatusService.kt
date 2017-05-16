@@ -29,19 +29,31 @@ class StatusService(val twitterServce: TwitterService,
 
     final val maxCachedStatus = 10000
 
-    val lookupExecutor = ThreadPoolExecutor(1, 4, 1000, TimeUnit.SECONDS,
-            ArrayBlockingQueue<Runnable>(100),
-            ThreadPoolExecutor.DiscardOldestPolicy())
+    val lookupExecutor =
+            ThreadPoolExecutor(1, 4, 1000, TimeUnit.SECONDS,
+                    ArrayBlockingQueue<Runnable>(100),
+                    ThreadPoolExecutor.DiscardOldestPolicy())
 
     val statusCache = Collections.synchronizedMap(LRUCache<Long, Status>(maxCachedStatus))
 
     val statusCtr = AtomicLong(0L)
 
     fun addStatus(newStatus: Status,
-                  isCacheOther: Boolean = false) {
+                  isCacheOther: Boolean = false,
+                  isCacheUsers: Boolean = false) {
         statusCache.put(newStatus.id, newStatus)
 
         if (isCacheOther) {
+            if (newStatus.retweetedStatus != null) {
+                this.addStatus(newStatus.retweetedStatus,
+                        isCacheOther, isCacheUsers)
+            }
+            if (newStatus.quotedStatus != null) {
+                this.addStatus(newStatus.quotedStatus,
+                        isCacheOther, isCacheUsers)
+            }
+        }
+        if (isCacheUsers) {
             userService.addUsersByStatus(newStatus)
         }
     }
@@ -53,7 +65,8 @@ class StatusService(val twitterServce: TwitterService,
     fun getOrLoadStatus(statusId: Long,
                         isToForce: Boolean,
                         consumer: (Status?) -> Unit,
-                        isCacheOther: Boolean = false) {
+                        isCacheOther: Boolean = false,
+                        isCacheUsers: Boolean = false) {
         val toStatus1: Status? =
                 if (isToForce) {
                     null
@@ -91,7 +104,7 @@ class StatusService(val twitterServce: TwitterService,
                                 logger.info("getOrLoadStatus() - status total: $statusTotal")
                             }
                             counterService.increment("services.status.request.loaded")
-                            addStatus(toStatus3, isCacheOther)
+                            addStatus(toStatus3, isCacheOther, isCacheUsers)
                         }
                     }
                     consumer(toStatus2)
