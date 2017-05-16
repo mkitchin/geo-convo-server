@@ -25,7 +25,7 @@ class UserService(val twitterServce: TwitterService,
      */
     val logger = LoggerFactory.getLogger(UserService::class.java)
 
-    final val errorSleepInMs = 5000L
+    final val errorSleepInMs = 10000L
 
     final val maxCachedUser = 10000
 

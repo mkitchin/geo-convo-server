@@ -25,7 +25,7 @@ class StatusService(val twitterServce: TwitterService,
      */
     val logger = LoggerFactory.getLogger(StatusService::class.java)
 
-    final val errorSleepInMs = 5000L
+    final val errorSleepInMs = 10000L
 
     final val maxCachedStatus = 10000
 
