@@ -95,7 +95,7 @@ let vectorSourceCache = new Map();
 let vectorLayerCache = new Map();
 let newFeatures = [];
 
-let ageThresholdsInMs = [(30 * 60 * 1000), (20 * 60 * 1000), (10 * 60 * 1000), newTimeInMs];
+let ageThresholdsInMs = [(25 * 60 * 1000), (15 * 60 * 1000), (5 * 60 * 1000), newTimeInMs];
 let ageOpacityDeltas = [-0.4, -0.3, -0.2, 0.0];
 let ageBrightnessDeltas = [-70, -50, -30, 0.0];
 
