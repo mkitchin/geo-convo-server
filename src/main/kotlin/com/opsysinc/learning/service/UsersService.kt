@@ -13,9 +13,19 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * User service.
+ * Users service.
+ *
+ * Functions as a user object cache and loading mechanism. Relies on a thread pool executor to pick up user objects
+ * via the REST (app-auth) client in parallel with the stream (user auth) client. We do this to (a) parallelize
+ * user retrieval and (b) soften the per-ip/-app rate limits for a app- (or) user-auth clients (Twitter actually
+ * recommends this).
+ *
+ * Love that elegant service injection via Kotlin ctor.
  *
  * Created by mkitchin on 5/13/2017.
+ *
+ * @param twitterServce Twitter service via service injection.
+ * @param counterService SB counter service via service injection.
  */
 @Service
 class UserService(val twitterServce: TwitterService,
@@ -25,39 +35,92 @@ class UserService(val twitterServce: TwitterService,
      */
     val logger = LoggerFactory.getLogger(UserService::class.java)
 
+    /**
+     * Time pause after client exceptions.
+     *
+     * Since rate limit checks, themselves are rate-limited we only check periodically so there's a respectable
+     * chance we'll catch a 4xx due to rate limit violations. It's not the end of the world, but Twitter will lock
+     * us out of we do it too often/too fast.
+     *
+     * When this happens, therefore we don't want to hammer the API until the next rate limit check tells us to stop
+     * and for how long (usually until the next 15min window), so this fixed wait usually gets us to the next rate
+     * check before trying for another user.
+     *
+     * We also get 4xx for restricted users, however (should probably differentiate).
+     */
     final val errorSleepInMs = 10000L
 
+    /**
+     * How many user objects to keep around.
+     */
     final val maxCachedUser = 10000
 
+    /**
+     * Thread pool executor.
+     *
+     * We typically generate more requests than may be fulfilled by the rate limits, so the fixed queue and
+     * DiscardOldestPolicy simply dumps pending requests when we're caught in a wait limit delay.
+     *
+     * Note: Yes, with we could coordinate client pools with same/different tokens, etc. That is a Twitter
+     * TOS violation and they actively work to track it down. Unlimited access is expensive for a reason.
+     *
+     * Basic idea: 1 source IP (and) client connection per app.
+     */
     val lookupExecutor = ThreadPoolExecutor(1, 4, 1000, TimeUnit.SECONDS,
             ArrayBlockingQueue<Runnable>(100),
             ThreadPoolExecutor.DiscardOldestPolicy())
 
+    /**
+     * User objects by ID.
+     */
     val userByIdCache = Collections.synchronizedMap(LRUCache<Long, User>(maxCachedUser))
 
+    /**
+     * User objects by screen name.
+     */
     val userByScreenNameCache = Collections.synchronizedMap(LRUCache<String, User>(maxCachedUser))
 
+    /**
+     * User object counter.
+     */
     val userCtr = AtomicLong(0L)
 
+    /**
+     * Adds user objects to both LRUs.
+     */
     fun addUser(newUser: User) {
         userByIdCache.put(newUser.id, newUser)
         userByScreenNameCache.put(newUser.screenName, newUser)
     }
 
-    fun addUsersByStatus(newStatus: Status) {
-        if (newStatus.user != null) {
-            addUser(newStatus.user)
+    /**
+     * Adds user objects embedded within status objects.
+     *
+     * @param newUser New user object.
+     */
+    fun addUsersByStatus(newUser: Status) {
+        if (newUser.user != null) {
+            addUser(newUser.user)
         }
-        if (newStatus.retweetedStatus != null
-                && newStatus.retweetedStatus.user != null) {
-            addUser(newStatus.retweetedStatus.user)
+        if (newUser.retweetedStatus != null
+                && newUser.retweetedStatus.user != null) {
+            addUser(newUser.retweetedStatus.user)
         }
-        if (newStatus.quotedStatus != null
-                && newStatus.quotedStatus.user != null) {
-            addUser(newStatus.quotedStatus.user)
+        if (newUser.quotedStatus != null
+                && newUser.quotedStatus.user != null) {
+            addUser(newUser.quotedStatus.user)
         }
     }
 
+    /**
+     * Gets user by ID.
+     *
+     * Also tickles the screen name map, if found so access-ordering remains
+     * approximately correct (concurrent enough they won't, over time).
+     *
+     * @param userId Twitter user ID.
+     * @return User object if found, null if not in cache.
+     */
     fun getUserById(userId: Long): User? {
         val foundUser: User? = userByIdCache[userId]
         if (foundUser != null) {
@@ -66,6 +129,15 @@ class UserService(val twitterServce: TwitterService,
         return foundUser
     }
 
+    /**
+     * Gets user by screen name.
+     *
+     * Also tickles the user ID map, if found so access-ordering remains
+     * approximately correct (concurrent enough they won't, over time).
+     *
+     * @param userScreeName Twitter user screen name (with/without "@" prefix).
+     * @return User object if found, null if not in cache.
+     */
     fun getUserByScreenName(userScreeName: String): User? {
         var workUserScreenName = userScreeName
         if (workUserScreenName.startsWith("@")) {
@@ -78,6 +150,17 @@ class UserService(val twitterServce: TwitterService,
         return foundUser
     }
 
+    /**
+     * Gets or loads user object, optionally forcing reload.
+     *
+     * Consumer will be called unless (a) a load is required/forced and (b) the task itself
+     * gets dumped from the queue (see above). User object argument to consumer may be null
+     * if not found (e.g., deleted).
+     *
+     * @param userId Twitter user ID.
+     * @param isToForce True to force loading via REST API, false to load only if missing from cache.
+     * @param consumer Consumer for cached/loaded results.
+     */
     fun getOrLoadUser(userId: Long,
                       isToForce: Boolean,
                       consumer: (User?) -> Unit) {

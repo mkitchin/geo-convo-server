@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling
 /**
  * Main application class.
  *
+ * This is your basic SpringBoot app runner class recast in Kotlin (e.g., with standalone main() method).
+ *
  * Created by mkitchin on 5/13/2017.
  */
 @SpringBootApplication
