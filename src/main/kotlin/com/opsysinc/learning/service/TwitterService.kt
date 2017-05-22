@@ -115,7 +115,8 @@ class TwitterService(val counterService: CounterService) {
                           resource: String,
                           checkIntervalInSec: Long = 10L,
                           minRequestsRemaining: Int = 10) {
-        // probably should use Kotlin's Pair or an array-based key, instead
+        // probably should use Kotlin's Pair or an array-based key, instead.
+        // And enums for the resources. Or just automate the whole thing.
         val checkKey = "$group|$resource"
         val lastRateLimitCheck = lastRateLimitChecks.computeIfAbsent(checkKey, { AtomicLong(0L) })
 
