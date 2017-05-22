@@ -10,7 +10,10 @@ import javax.annotation.PostConstruct
 
 
 /**
- * Twitter listener service.
+ * Twitter stream service.
+ *
+ * Maintains Twitter "stream" API client, a means of receiving continuous Tweet traffic
+ * based on a app-supplied filter (e.g., by location, topic, users).
  *
  * Created by mkitchin on 5/13/2017.
  */
@@ -35,6 +38,11 @@ class TwitterStreamService {
 
     var twitterStream: TwitterStream? = null
 
+    /**
+     * Create twitter stream client via Twitter4J. Not much to this.
+     *
+     * Filter selection takes place in the LinksService or TrendsService.
+     */
     @PostConstruct
     fun postConstruct() {
         val configurationBuilder = ConfigurationBuilder()
@@ -48,6 +56,10 @@ class TwitterStreamService {
         this.twitterStream = localTwitterStream
     }
 
+    /**
+     * Gets Twitter stream client.
+     * @return Twitter stream client.
+     */
     fun getTwitterStreamClient(): TwitterStream {
         return this.twitterStream!!
     }
