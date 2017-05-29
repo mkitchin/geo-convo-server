@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Trend data class.
  *
+ * Reference-counts a Twitter Trend (topic activity in a given place).
+ *
  * Created by mkitchin on 5/13/2017.
  */
 data class TrendData(

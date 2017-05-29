@@ -7,6 +7,10 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Tag data.
  *
+ * Correlates to a Tweet Entity (username, hashtag), with metadata such as supplying Status IDs w/times.
+ *
+ * Tweets LRU reflexes the (n) most-recent references of a given tag.
+ *
  * Created by mkitchin on 5/13/2017.
  */
 data class TagData(val id: String,

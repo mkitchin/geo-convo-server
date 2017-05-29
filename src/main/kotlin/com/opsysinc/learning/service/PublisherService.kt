@@ -9,12 +9,13 @@ import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import twitter4j.User
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Publisher service.
+ *
+ * Collates links and metadata into GeoJSON-compatible features for clients.
  *
  * Created by mkitchin on 5/13/2017.
  */
@@ -28,19 +29,37 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
      */
     val logger = LoggerFactory.getLogger(PublisherService::class.java)
 
+    /**
+     * When generating user profile links.
+     */
     final val userProfileUrlPrefix = "https://twitter.com/"
 
+    /**
+     * Max age for routinely-published links.
+     */
     final val maxPublishedLinkAge = 0L
 
+    /**
+     * Max routinely-published links per type.
+     */
     final val maxPublishedLinksPerType = 100
 
+    /**
+     * Max tweets published per link.
+     */
     final val maxPublishedTweetsPerLink = 100
 
+    /***
+     * Max entities published per end (link endpoint).
+     */
     final val maxPublishedEntitiesPerEnd = 50
 
+    /**
+     * Periodic publication job.
+     */
     @Scheduled(fixedDelay = 1000)
     fun sendMessage() {
-        val featureCollection = buildFeatrureCollection(maxPublishedLinkAge, maxPublishedLinksPerType, maxPublishedLinksPerType)
+        val featureCollection = buildFeatureCollection(maxPublishedLinkAge, maxPublishedLinksPerType, maxPublishedLinksPerType)
 
         if (!featureCollection.features.isEmpty()) {
             counterService.increment("services.publisher.messages.published")
@@ -50,37 +69,49 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         }
     }
 
-    fun buildFeatrureCollection(maxAgeInMs: Long = 0L,
-                                maxKnownLinks: Int = 0,
-                                maxUnknownLinks: Int = 0): FeatureCollection {
+    /**
+     * Builds feature collections from either (a) the current body of links
+     * or (b) changed links not yet published.
+     */
+    fun buildFeatureCollection(maxAgeInMs: Long = 0L,
+                               maxKnownLinks: Int = 0,
+                               maxUnknownLinks: Int = 0): FeatureCollection {
         val featureCollection = FeatureCollection()
 
         val nowTime = System.currentTimeMillis()
         val minUpdatedOn = (nowTime - maxAgeInMs)
 
+        // get known (two-way) links to check
         val knownLinks: List<LinkData> =
                 if (maxAgeInMs == 0L) {
                     linkService.getPendingKnownLinks()
                 } else {
+                    // .asReversed() should return a
+                    // reversed *view* of a list.
                     linkService.allKnownLinkCache.values
                             .toList().asReversed()
                 }
         val knownFeatureCtr = AtomicLong(0L)
 
+        // iterate known (two-way) links and publish
         run knownLinks@ {
             knownLinks.forEach { linkItem ->
+                // publish changed, unpublished links
                 if (if (maxAgeInMs == 0L) {
                     (linkItem.updatedOn.get() >
                             linkItem.publishedOn.get())
+                    // or publish according to supplied, max age
                 } else {
                     (linkItem.updatedOn.get() >
                             minUpdatedOn)
                 }) {
+                    // if we're change tracking, stash publish time
+                    // for later checks (not idempotent)
                     if (maxAgeInMs == 0L) {
                         linkItem.publishedOn.set(nowTime)
                     }
 
-                    // link
+                    // build line string for known (two-way) link
                     counterService.increment("services.publisher.links.published")
                     val linkFeature = Feature()
                     featureCollection.features.add(linkFeature)
@@ -96,7 +127,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     linkFeature.properties.put("type", "link")
                     buildLinkFeatureProperties(linkItem, linkFeature)
 
-                    // first point
+                    // build first point for known (two-way) link
                     counterService.increment("services.publisher.ends.published")
                     val firstFeature = Feature()
                     featureCollection.features.add(firstFeature)
@@ -108,7 +139,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     firstFeature.properties.put("type", "end")
                     buildLinkFeatureProperties(linkItem, firstFeature, true, false)
 
-                    // second point
+                    // build second point for known (two-way) link
                     counterService.increment("services.publisher.ends.published")
                     val secondFeature = Feature()
                     featureCollection.features.add(secondFeature)
@@ -122,13 +153,14 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
 
                     if (knownFeatureCtr.incrementAndGet() > maxKnownLinks
                             && maxKnownLinks > 0) {
-                        // hit the limi
+                        // we're outa here (labels!)
                         return@knownLinks
                     }
                 }
             }
         }
 
+        // get unknown (one-way) links to check
         val unknownLinks: List<LinkData> =
                 if (maxAgeInMs == 0L) {
                     linkService.getPendingUnknownLinks()
@@ -138,19 +170,25 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                 }
         val unknownFeatureCtr = AtomicLong(0L)
 
+        // iterate unknown (one-way) links and publish
         run unknownLinks@ {
             unknownLinks.forEach { linkItem ->
+                // publish changed, unpublished links
                 if (if (maxAgeInMs == 0L) {
                     (linkItem.updatedOn.get() >
                             linkItem.publishedOn.get())
+                    // or publish according to supplied, max age
                 } else {
                     (linkItem.updatedOn.get() >
                             minUpdatedOn)
                 }) {
+                    // if we're change tracking, stash publish time
+                    // for later checks (not idempotent)
                     if (maxAgeInMs == 0L) {
                         linkItem.publishedOn.set(nowTime)
                     }
 
+                    // build point for unknown (one-way) link
                     counterService.increment("services.publisher.points.published")
                     val pointFeature = Feature()
                     featureCollection.features.add(pointFeature)
@@ -164,7 +202,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
 
                     if (unknownFeatureCtr.incrementAndGet() > maxUnknownLinks
                             && maxUnknownLinks > 0) {
-                        // hit the limi
+                        // we're outa here (labels!)
                         return@unknownLinks
                     }
                 }
@@ -174,6 +212,9 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         return featureCollection
     }
 
+    /**
+     * Builds properties to add to published features.
+     */
     fun buildLinkFeatureProperties(linkData: LinkData,
                                    linkFeature: Feature,
                                    isIncludeFirst: Boolean = true,
@@ -182,68 +223,79 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         linkFeature.properties.put("hits", linkData.hitCtr.get())
         linkFeature.properties.put("updated", linkData.updatedOn)
 
-        // first
         val featureHashTags = sortedSetOf<String>()
         val featureUserNames = sortedSetOf<String>()
         val featureTweetList = mutableListOf<Pair<Long, Long>>()
 
-        // first
+        // include first part of link (optional because we add
+        // attribs to linestring *and* respective, endpoint features)
         if (isIncludeFirst) {
             val firstHashTags = linkData.firstTags[TagType.HashTag]
             if (firstHashTags != null) {
+                // capture max, most-recent hash tags
                 featureHashTags.addAll(firstHashTags.values
                         .toList().asReversed()
                         .take(maxPublishedEntitiesPerEnd)
                         .map { "#${it.tagValue}" })
+                // capture supporting tweets/tweet times
                 featureTweetList.addAll(firstHashTags.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
             val firstUserNames = linkData.firstTags[TagType.UserName]
             if (firstUserNames != null) {
+                // capture max, most-recent user names
                 featureUserNames.addAll(firstUserNames.values
                         .toList().asReversed()
                         .take(maxPublishedEntitiesPerEnd)
                         .map { "@${it.tagValue}" })
+                // capture supporting tweets/tweet times
                 featureTweetList.addAll(firstUserNames.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
         }
 
-        // second
+        // include second part of link (optional because we add
+        // attribs to linestring *and* respective, endpoint features)
+        // (dupe code -- should be modularized)
         if (isIncludeSecond) {
             val secondHashTags = linkData.secondTags[TagType.HashTag]
             if (secondHashTags != null) {
+                // capture max, most-recent hash tags
                 featureHashTags.addAll(secondHashTags.values
                         .toList().asReversed()
                         .take(maxPublishedEntitiesPerEnd)
                         .map { "#${it.tagValue}" })
+                // capture supporting tweets/tweet times
                 featureTweetList.addAll(secondHashTags.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
             val secondUserNames = linkData.secondTags[TagType.UserName]
             if (secondUserNames != null) {
+                // capture max, most-recent user names
                 featureUserNames.addAll(secondUserNames.values
                         .toList().asReversed()
                         .take(maxPublishedEntitiesPerEnd)
                         .map { "@${it.tagValue}" })
+                // capture supporting tweets/tweet times
                 featureTweetList.addAll(secondUserNames.values
                         .map { it.tweets.entries }.flatten()
                         .map { Pair(it.key, it.value) })
             }
         }
 
+        // order tweets, newest to oldest
         featureTweetList.sortByDescending { it.second }
 
-        // tweets
+        // dereference sorted list and reduce to max number
         val featureTweets = LinkedHashSet(
-                featureTweetList
-                        .take(maxPublishedTweetsPerLink)
-                        .map { it.first.toString() })
+                featureTweetList.map { it.first.toString() })
+                .take(maxPublishedTweetsPerLink)
 
-        // media
+        // build user image URLs, profile links, and screen names
+        // for thumbnails, etc.
         val featureMedia = featureUserNames
                 .map { userService.getUserByScreenName(it) }
                 .filterNotNull()
