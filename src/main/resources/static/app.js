@@ -5,7 +5,7 @@
  */
 // Go here to create a Mapbox account and get this token:
 // https://www.mapbox.com/signup/
-let mapboxAccessToken = '<your-mapbox-access-token>';
+let mapboxAccessToken = 'pk.eyJ1IjoibWNveW90ZSIsImEiOiJPRGR2b0V3In0.wVf9Mnu06-X7YooA0nlMLw';
 let mapboxStyleName = 'traffic-night-v2';
 let sockJs = null;
 let stompClient = null;
