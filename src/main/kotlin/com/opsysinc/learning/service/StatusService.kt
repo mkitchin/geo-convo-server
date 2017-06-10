@@ -53,7 +53,7 @@ class StatusService(val twitterServce: TwitterService,
     /**
      * How many status objects to keep around.
      */
-    final val maxCachedStatus = 10000
+    final val maxCachedStatus = 1000
 
     /**
      * Thread pool executor.

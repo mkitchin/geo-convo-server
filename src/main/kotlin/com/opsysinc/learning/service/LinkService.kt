@@ -38,7 +38,7 @@ class LinkService(
      * Max number of links to keep track of (maintain older ones
      * in case they get refreshed over time).
      */
-    final val maxCachedLinks = 10000
+    final val maxCachedLinks = 1000
 
     /**
      * Max number of Tweets to track to prevent accidental re-processing.
