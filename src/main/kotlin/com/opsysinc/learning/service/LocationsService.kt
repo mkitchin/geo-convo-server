@@ -37,11 +37,16 @@ class LocationsService(val counterService: CounterService) {
     @Value("\${place.buffer.path}")
     var placeBufferPath: String? = null
 
-    val filterCache = Collections.synchronizedMap(LRUCache<String, Filter>(1000))
+    /**
+     * Max cache size.
+     */
+    final val maxCacheSize = 1000
 
-    val locationByFilterCache = Collections.synchronizedMap(LRUCache<String, LocationData>(1000))
+    val filterCache = Collections.synchronizedMap(LRUCache<String, Filter>(maxCacheSize))
 
-    val locationByFeatureCache = Collections.synchronizedMap(LRUCache<String, LocationData>(1000))
+    val locationByFilterCache = Collections.synchronizedMap(LRUCache<String, LocationData>(maxCacheSize))
+
+    val locationByFeatureCache = Collections.synchronizedMap(LRUCache<String, LocationData>(maxCacheSize))
 
     var featureSource: SimpleFeatureSource? = null
 
