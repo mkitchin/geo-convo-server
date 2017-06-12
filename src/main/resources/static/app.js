@@ -1187,7 +1187,7 @@ function setupCarousel() {
     for (let ctr = 1; ctr <= 26; ctr++) {
         slideDivs.push($('<div/>', {
             'html': $('<img/>', {
-                'src': '/img/Slide' + ctr + '.PNG'
+                'data-lazy': '/img/Slide' + ctr + '.PNG'
             })
         }));
     }
@@ -1206,6 +1206,7 @@ function setupCarousel() {
 
     let introCarouselBody = $('#intro-carousel-body');
     introCarouselBody.slick({
+        'lazyLoad': 'ondemand',
         'dots': true,
         'fade': true
     });
