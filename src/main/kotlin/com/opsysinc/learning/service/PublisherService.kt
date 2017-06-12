@@ -300,7 +300,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                 .map { userService.getUserByScreenName(it) }
                 .filterNotNull()
                 .map {
-                    arrayOf(it.profileImageURL,
+                    arrayOf(it.profileImageURLHttps,
                             (userProfileUrlPrefix + it.screenName),
                             ("@" + it.screenName))
                 }
