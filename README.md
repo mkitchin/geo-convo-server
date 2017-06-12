@@ -3,7 +3,7 @@ Twitter conversation scanning and mapping tool, made with SpringBoot, Kotlin, Op
 
 Uses websockets for continuous, low-overhead updates and geospatial bucketing for (somewhat) decluttered presentation.
 
-This is POC-level code (hence, shit for comments).
+This is POC-level code (comments/tests are on the to-do list).
 # Overview
 Main UI on a typical Sunday morning:
 ![alt text](doc/main-ux-0.png "Main UX #0")
