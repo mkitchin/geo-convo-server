@@ -142,8 +142,8 @@ a:link, a:visited, a:active, a:hover {
 }
 
 #intro-carousel-body {
-    width: 1024px;
-    height: 768px;
+    width: 800px;
+    height: 600px;
 }
 
 .list-overlay {
