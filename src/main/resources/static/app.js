@@ -1187,7 +1187,7 @@ function setupCarousel() {
     for (let ctr = 1; ctr <= 27; ctr++) {
         slideDivs.push($('<div/>', {
             'html': $('<img/>', {
-                'src': '/img/Slide' + ctr + '.png'
+                'src': '/img/Slide' + ctr + '.PNG'
             })
         }));
     }
