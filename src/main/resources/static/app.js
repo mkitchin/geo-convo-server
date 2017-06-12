@@ -1184,7 +1184,7 @@ function setupLists() {
 
 function setupCarousel() {
     let slideDivs = [];
-    for (let ctr = 1; ctr <= 27; ctr++) {
+    for (let ctr = 1; ctr <= 26; ctr++) {
         slideDivs.push($('<div/>', {
             'html': $('<img/>', {
                 'src': '/img/Slide' + ctr + '.PNG'
