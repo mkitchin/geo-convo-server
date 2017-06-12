@@ -1074,6 +1074,148 @@ function setupColors() {
     }
 }
 
+function setupLists() {
+    // main popup
+    $('<div/>', {
+        'id': 'link-popup',
+        'class': 'ol-popup-large',
+        'html': $('<a/>', {
+            'href': '#',
+            'id': 'link-popup-closer',
+            'class': 'ol-popup-large-closer'
+        })
+    }).append($('<div/>', {
+        'id': 'link-popup-content'
+    })).appendTo(document.body);
+    linkOverlayContainer = $('#link-popup')[0];
+    linkOverlay.setElement(linkOverlayContainer);
+    linkOverlayContent = $('#link-popup-content')[0];
+
+    linkOverlayCloser = $('#link-popup-closer')[0];
+    linkOverlayCloser.onclick =
+        function () {
+            hideTweetPopup();
+            return false;
+        };
+
+    // left media popup
+    $('<div/>', {
+        'id': 'left-popup',
+        'class': 'ol-popup-small'
+    }).append($('<div/>', {
+        'id': 'left-popup-content'
+    })).appendTo(document.body);
+    leftOverlayContainer = $('#left-popup')[0];
+    leftOverlay.setElement(leftOverlayContainer);
+    leftOverlayContent = $('#left-popup-content')[0];
+
+    // right media popup
+    $('<div/>', {
+        'id': 'right-popup',
+        'class': 'ol-popup-small'
+    }).append($('<div/>', {
+        'id': 'right-popup-content'
+    })).appendTo(document.body);
+    rightOverlayContainer = $('#right-popup')[0];
+    rightOverlay.setElement(rightOverlayContainer);
+    rightOverlayContent = $('#right-popup-content')[0];
+
+    // tooltip media popup
+    $('<div/>', {
+        'id': 'tooltip-popup',
+        'class': 'ol-popup-tooltip'
+    }).append($('<div/>', {
+        'id': 'tooltip-popup-content'
+    })).appendTo(document.body);
+    tooltipOverlayContainer = $('#tooltip-popup')[0];
+    tooltipOverlay.setElement(tooltipOverlayContainer);
+    tooltipOverlayContent = $('#tooltip-popup-content')[0];
+
+    // usernames overlay
+    $('<div/>', {
+        'id': 'usernames-overlay',
+        'class': 'list-overlay',
+        'html': $('<div/>', {
+            'id': 'usernames-wrapper',
+            'class': 'list-wrapper',
+            'html': $('<ul/>', {
+                'id': 'usernames-select',
+                'data-role': 'listview',
+                'data-filter': 'true',
+                'data-filter-placeholder': 'Usernames...',
+                'data-inset': 'true',
+                'data-theme': 'b',
+                'data-count-theme': 'a'
+            })
+        })
+    }).appendTo(document.body);
+    userNamesListSelector = $('#usernames-select');
+    userNamesListSelector.listview();
+    userNamesListSelector
+        .on('click', 'li', function () {
+            toggleSelectedUserName($(this).attr('id'));
+        });
+
+    // hashtags overlay
+    $('<div/>', {
+        'id': 'hashtags-overlay',
+        'class': 'list-overlay',
+        'html': $('<div/>', {
+            'id': 'hashtags-wrapper',
+            'class': 'list-wrapper',
+            'html': $('<ul/>', {
+                'id': 'hashtags-select',
+                'data-role': 'listview',
+                'data-filter': 'true',
+                'data-filter-placeholder': 'Hashtags...',
+                'data-inset': 'true',
+                'data-theme': 'b',
+                'data-count-theme': 'a'
+            })
+        })
+    }).appendTo(document.body);
+    hashTagsListSelector = $('#hashtags-select');
+    hashTagsListSelector.listview();
+    hashTagsListSelector
+        .on('click', 'li', function () {
+            toggleSelectedHashTag($(this).attr('id'));
+        });
+}
+
+function setupCarousel() {
+    let slideDivs = [];
+    for (let ctr = 1; ctr <= 27; ctr++) {
+        slideDivs.push($('<div/>', {
+            'html': $('<img/>', {
+                'src': '/img/Slide' + ctr + '.png'
+            })
+        }));
+    }
+
+    $('<div/>', {
+        'id': 'intro-carousel',
+        'class': 'ui-content',
+        'data-role': 'popup',
+        'data-history': 'false',
+        'data-overlay-theme': 'b',
+        'html': $('<div/>', {
+            'id': 'intro-carousel-body',
+            'html': slideDivs
+        })
+    }).appendTo(document.body);
+
+    let introCarouselBody = $('#intro-carousel-body');
+    introCarouselBody.slick({
+        'dots': true,
+        'fade': true
+    });
+    let introCarousel = $('#intro-carousel');
+    introCarousel.popup({
+        'positionTo': 'window'
+    });
+    introCarousel.popup("open");
+}
+
 function setupMap() {
     let tileSource =
         new ol.source.XYZ({
@@ -1222,116 +1364,16 @@ function setupMap() {
 }
 
 $(window)
-    .bind('beforeunload', function () {
+    .on('beforeunload', function () {
         disconnectStomp();
     });
 
 $(document)
-    .bind('pagecreate', function () {
-        // main popup
-        $('<div/>', {
-            'id': 'link-popup',
-            'class': 'ol-popup-large',
-            'html': $('<a/>', {
-                'href': '#',
-                'id': 'link-popup-closer',
-                'class': 'ol-popup-large-closer'
-            })
-        }).append($('<div/>', {
-            'id': 'link-popup-content'
-        })).appendTo(document.body);
-        linkOverlayContainer = $('#link-popup')[0];
-        linkOverlay.setElement(linkOverlayContainer);
-        linkOverlayContent = $('#link-popup-content')[0];
+    .on('pagecreate', function () {
+        setupLists();
+    });
 
-        linkOverlayCloser = $('#link-popup-closer')[0];
-        linkOverlayCloser.onclick =
-            function () {
-                hideTweetPopup();
-                return false;
-            };
-
-        // left media popup
-        $('<div/>', {
-            'id': 'left-popup',
-            'class': 'ol-popup-small'
-        }).append($('<div/>', {
-            'id': 'left-popup-content'
-        })).appendTo(document.body);
-        leftOverlayContainer = $('#left-popup')[0];
-        leftOverlay.setElement(leftOverlayContainer);
-        leftOverlayContent = $('#left-popup-content')[0];
-
-        // right media popup
-        $('<div/>', {
-            'id': 'right-popup',
-            'class': 'ol-popup-small'
-        }).append($('<div/>', {
-            'id': 'right-popup-content'
-        })).appendTo(document.body);
-        rightOverlayContainer = $('#right-popup')[0];
-        rightOverlay.setElement(rightOverlayContainer);
-        rightOverlayContent = $('#right-popup-content')[0];
-
-        // tooltip media popup
-        $('<div/>', {
-            'id': 'tooltip-popup',
-            'class': 'ol-popup-tooltip'
-        }).append($('<div/>', {
-            'id': 'tooltip-popup-content'
-        })).appendTo(document.body);
-        tooltipOverlayContainer = $('#tooltip-popup')[0];
-        tooltipOverlay.setElement(tooltipOverlayContainer);
-        tooltipOverlayContent = $('#tooltip-popup-content')[0];
-
-        // usernames overlay
-        $('<div/>', {
-            'id': 'usernames-overlay',
-            'class': 'list-overlay',
-            'html': $('<div/>', {
-                'id': 'usernames-wrapper',
-                'class': 'list-wrapper',
-                'html': $('<ul/>', {
-                    'id': 'usernames-select',
-                    'data-role': 'listview',
-                    'data-filter': 'true',
-                    'data-filter-placeholder': 'Usernames...',
-                    'data-inset': 'true',
-                    'data-theme': 'b',
-                    'data-count-theme': 'a'
-                })
-            })
-        }).appendTo(document.body);
-        userNamesListSelector = $('#usernames-select');
-        userNamesListSelector.listview();
-        userNamesListSelector
-            .on('click', 'li', function () {
-                toggleSelectedUserName($(this).attr('id'));
-            });
-
-        // hashtags overlay
-        $('<div/>', {
-            'id': 'hashtags-overlay',
-            'class': 'list-overlay',
-            'html': $('<div/>', {
-                'id': 'hashtags-wrapper',
-                'class': 'list-wrapper',
-                'html': $('<ul/>', {
-                    'id': 'hashtags-select',
-                    'data-role': 'listview',
-                    'data-filter': 'true',
-                    'data-filter-placeholder': 'Hashtags...',
-                    'data-inset': 'true',
-                    'data-theme': 'b',
-                    'data-count-theme': 'a'
-                })
-            })
-        }).appendTo(document.body);
-        hashTagsListSelector = $('#hashtags-select');
-        hashTagsListSelector.listview();
-        hashTagsListSelector
-            .on('click', 'li', function () {
-                toggleSelectedHashTag($(this).attr('id'));
-            });
-    })
-;
+$(document)
+    .on('pageshow', function () {
+        setupCarousel();
+    });

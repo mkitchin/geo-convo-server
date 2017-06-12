@@ -28,6 +28,7 @@
         <stomp-websocket.version>2.3.3-1</stomp-websocket.version>
         <jquery.version>2.1.4</jquery.version>
         <jquery-mobile.version>1.4.5</jquery-mobile.version>
+        <slick-carousel.version>1.6.0</slick-carousel.version>
     </properties>
 
     <dependencies>
@@ -95,6 +96,11 @@
             <groupId>org.webjars</groupId>
             <artifactId>jquery-mobile</artifactId>
             <version>${jquery-mobile.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>slick</artifactId>
+            <version>${slick-carousel.version}</version>
         </dependency>
 
         <!-- Kotlin stuff -->
