@@ -1184,6 +1184,16 @@ function setupLists() {
 
 function setupCarousel() {
     let slideDivs = [];
+    slideDivs.push($('<div/>', {
+        'html': $('<iframe/>', {
+            'width': '560',
+            'height': '315',
+            'src': 'https://www.youtube.com/embed/mFokK_1lvyI',
+            'frameborder': '0',
+            'allowfullscreen': '',
+            'html': ''
+        })
+    }));
     for (let ctr = 1; ctr <= 26; ctr++) {
         slideDivs.push($('<div/>', {
             'html': $('<img/>', {
@@ -1335,33 +1345,31 @@ function setupMap() {
         function (event) {
             hideTooltipPopup();
         });
-
-    setupColors();
-
-    setTimeout(
+    map.once('postrender',
         function () {
+            setupColors();
             connectStomp();
-        }, 1000);
-    setInterval(
-        function () {
-            checkListContents();
-        }, refreshListsIntervalInMs);
-    setInterval(
-        function () {
-            checkProfilePopups();
-        }, (profilePopupTimeoutInMs / 4));
-    setInterval(
-        function () {
-            checkTooltipPopup();
-        }, (pointerMoveTimeoutInMs / 2));
-    setInterval(
-        function () {
-            checkNewFeatures(null);
-        }, (newTimeInMs / 4));
-    setInterval(
-        function () {
-            classifyFeatures(null);
-        }, classifyIntervalInMs);
+            setInterval(
+                function () {
+                    checkListContents();
+                }, refreshListsIntervalInMs);
+            setInterval(
+                function () {
+                    checkProfilePopups();
+                }, (profilePopupTimeoutInMs / 4));
+            setInterval(
+                function () {
+                    checkTooltipPopup();
+                }, (pointerMoveTimeoutInMs / 2));
+            setInterval(
+                function () {
+                    checkNewFeatures(null);
+                }, (newTimeInMs / 4));
+            setInterval(
+                function () {
+                    classifyFeatures(null);
+                }, classifyIntervalInMs);
+        });
 }
 
 $(window)
