@@ -1184,16 +1184,6 @@ function setupLists() {
 
 function setupCarousel() {
     let slideDivs = [];
-    slideDivs.push($('<div/>', {
-        'html': $('<iframe/>', {
-            'width': '560',
-            'height': '315',
-            'src': 'https://www.youtube.com/embed/mFokK_1lvyI',
-            'frameborder': '0',
-            'allowfullscreen': '',
-            'html': ''
-        })
-    }));
     for (let ctr = 1; ctr <= 26; ctr++) {
         slideDivs.push($('<div/>', {
             'html': $('<img/>', {
