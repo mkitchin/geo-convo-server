@@ -450,8 +450,8 @@ function getPointStyle(strokeColor, fillColor,
     }
     let cacheKey =
         ('point|' + strokeColor.toString()
-        + "|" + fillColor.toString()
-        + "|" + pointRadius.toString());
+            + "|" + fillColor.toString()
+            + "|" + pointRadius.toString());
     let foundStyle = styleCache[cacheKey];
     if (!foundStyle) {
         foundStyle = [
@@ -476,9 +476,9 @@ function getPointStyle(strokeColor, fillColor,
 function getClusterStyle(textColor, strokeColor, fillColor, size) {
     let cacheKey =
         ('cluster|' + textColor.toString()
-        + "|" + strokeColor.toString()
-        + "|" + fillColor.toString()
-        + "|" + size.toString());
+            + "|" + strokeColor.toString()
+            + "|" + fillColor.toString()
+            + "|" + size.toString());
     let foundStyle = styleCache[cacheKey];
     if (!foundStyle) {
         foundStyle = [
@@ -748,7 +748,7 @@ function showTweetPopup(nextFeature) {
             function (nextPlace) {
                 htmlText +=
                     ('<tr><td align="center">'
-                    + nextPlace + '</td></tr>');
+                        + nextPlace + '</td></tr>');
             });
         htmlText += ('</table>');
     }
@@ -831,18 +831,18 @@ function showProfilePopups(nextFeature) {
     if (leftMedia) {
         leftOverlayContent.innerHTML =
             ('<div class="small-popup-content"><a target="_blank" href="'
-            + leftMedia[1] + '"><img class="bordered-profile-picture" src="'
-            + leftMedia[0] + '" alt="'
-            + leftMedia[2] + '"/></a></div>');
+                + leftMedia[1] + '"><img class="bordered-profile-picture" src="'
+                + leftMedia[0] + '" alt="'
+                + leftMedia[2] + '"/></a></div>');
         leftOverlay.setPosition(nextCenter);
         showCtr++;
     }
     if (rightMedia) {
         rightOverlayContent.innerHTML =
             ('<div class="small-popup-content"><a target="_blank"href="'
-            + rightMedia[1] + '"><img class="bordered-profile-picture" src="'
-            + rightMedia[0] + '" alt="'
-            + rightMedia[2] + '"/></a></div>');
+                + rightMedia[1] + '"><img class="bordered-profile-picture" src="'
+                + rightMedia[0] + '" alt="'
+                + rightMedia[2] + '"/></a></div>');
         rightOverlay.setPosition(nextCenter);
         showCtr++;
     }
@@ -867,7 +867,7 @@ function showTooltipPopup(nextFeature, coordinate) {
             function (nextPlace) {
                 htmlText +=
                     ('<tr><td align="center">'
-                    + nextPlace + '</td></tr>');
+                        + nextPlace + '</td></tr>');
             });
     }
 
@@ -881,9 +881,9 @@ function showTooltipPopup(nextFeature, coordinate) {
                 }
                 htmlText +=
                     ('<a target="_blank" href="'
-                    + nextMedia[1] + '"><img class="bordered-profile-picture" src="'
-                    + nextMedia[0] + '" alt="'
-                    + nextMedia[2] + '"/></a>');
+                        + nextMedia[1] + '"><img class="bordered-profile-picture" src="'
+                        + nextMedia[0] + '" alt="'
+                        + nextMedia[2] + '"/></a>');
                 mediaCtr++;
                 if (mediaCtr > 4) {
                     htmlText += '</td></tr>';
@@ -904,18 +904,18 @@ function showTooltipPopup(nextFeature, coordinate) {
             for (let nextHashTag of hashTagArray) {
                 htmlText +=
                     ('<div class="hashtag-label"><a target="_blank" href="'
-                    + twitterSearchUriPrefix
-                    + encodeURIComponent(nextHashTag) + '">'
-                    + nextHashTag + '</a></div>');
+                        + twitterSearchUriPrefix
+                        + encodeURIComponent(nextHashTag) + '">'
+                        + nextHashTag + '</a></div>');
             }
         }
         if (userNameArray.length > 0) {
             for (let nextUserName of userNameArray) {
                 htmlText +=
                     ('<div class="username-label"><a target="_blank" href="'
-                    + twitterSearchUriPrefix
-                    + encodeURIComponent(nextUserName) + '">'
-                    + nextUserName + '</a></div>');
+                        + twitterSearchUriPrefix
+                        + encodeURIComponent(nextUserName) + '">'
+                        + nextUserName + '</a></div>');
             }
         }
         htmlText += ('</td></tr>');
@@ -1221,8 +1221,8 @@ function setupMap() {
     let tileSource =
         new ol.source.XYZ({
             url: ('https://api.mapbox.com/styles/v1/mapbox/'
-            + mapboxStyleName + '/tiles/256/{z}/{x}/{y}?access_token='
-            + mapboxAccessToken)
+                + mapboxStyleName + '/tiles/256/{z}/{x}/{y}?access_token='
+                + mapboxAccessToken)
         });
 
     linkOverlay =
@@ -1301,10 +1301,12 @@ function setupMap() {
                 updateEntityCounts([prevEntry[1]], true);
 
                 let vectorSource = vectorSourceCache.get(prevEntry[1].get('type'));
-                let prevFeature = vectorSource.getFeatureById(prevEntry[1].getId());
+                if (vectorSource) {
+                    let prevFeature = vectorSource.getFeatureById(prevEntry[1].getId());
 
-                if (prevFeature) {
-                    vectorSource.removeFeature(prevEntry[1]);
+                    if (prevFeature) {
+                        vectorSource.removeFeature(prevEntry[1]);
+                    }
                 }
                 return prevEntry;
             };
