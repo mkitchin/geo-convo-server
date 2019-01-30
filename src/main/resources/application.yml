@@ -24,15 +24,3 @@ place:
   buffer:
     name: place-buffers-1
     path: data/geo/place-buffers-1.shp
-
-security:
-  user:
-    name: admin
-    password: admin123!
-  basic:
-    enabled: false
-
-management:
-  security:
-    enabled: true
-    roles: ADMIN
