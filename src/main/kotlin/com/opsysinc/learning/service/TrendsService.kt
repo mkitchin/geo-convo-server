@@ -1,9 +1,9 @@
 package com.opsysinc.learning.service
 
 import com.opsysinc.learning.data.TrendData
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.*
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong
 @Service
 class TrendsService(val twitterService: TwitterService,
                     val twitterStreamService: TwitterStreamService,
-                    val counterService: CounterService) {
+                    val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -52,7 +52,7 @@ class TrendsService(val twitterService: TwitterService,
         synchronized(twitterService.getResourceLock("trends", "/trends/available")) {
             // Step 1: Get trending places
             twitterService.checkRateLimiting("trends", "/trends/available", 0L, 1)
-            counterService.increment("services.trends.requests.places")
+            meterRegistry.counter("services.trends.requests.places").increment()
             val availablePlaces = twitter.availableTrends
 
             val sortedPlaces = availablePlaces.filter {
@@ -69,7 +69,7 @@ class TrendsService(val twitterService: TwitterService,
             twitterService.checkRateLimiting("trends", "/trends/place", 0L, finalPlaces.size)
             val trendMap = sortedMapOf<String, TrendData>()
             for (location in finalPlaces) {
-                counterService.increment("services.trends.requests.trends")
+                meterRegistry.counter("services.trends.requests.trends").increment()
                 val trends = twitter.getPlaceTrends(location.woeid)
 
                 logger.info("trends (${trends.trends.size}): $trends")

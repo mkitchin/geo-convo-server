@@ -5,9 +5,9 @@ import com.opsysinc.learning.data.LocationData
 import com.opsysinc.learning.data.TagData
 import com.opsysinc.learning.data.TagType
 import com.opsysinc.learning.util.LRUCache
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.stereotype.Service
 import twitter4j.FilterQuery
 import twitter4j.Status
@@ -28,7 +28,7 @@ class LinkService(
         val twitterStreamService: TwitterStreamService,
         val locationsService: LocationsService,
         val statusService: StatusService,
-        val counterService: CounterService) {
+        val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -108,7 +108,7 @@ class LinkService(
                      chainCtr: Int = 0) {
         // Step 0: Make sure we haven't seen this before
         if (finishedStatusCache.contains(status.id)) {
-            counterService.increment("services.links.tweets.duplicate");
+            meterRegistry.counter("services.links.tweets.duplicate").increment()
             return
         }
         finishedStatusCache.add(status.id)
@@ -119,19 +119,19 @@ class LinkService(
         }
 
         // Try and find related location
-        counterService.increment("services.links.tweets.new");
+        meterRegistry.counter("services.links.tweets.new").increment()
         val statusLocation = locationsService.getLocationByStatus(status)
 
         // nope? bail
         if (statusLocation == null) {
-            counterService.increment("services.links.tweets.source.location.unknown");
+            meterRegistry.counter("services.links.tweets.source.location.unknown").increment()
         } else {
             // ok, we've got at least one location
-            counterService.increment("services.links.tweets.source.location.known");
+            meterRegistry.counter("services.links.tweets.source.location.known").increment()
 
             // Step 1: Check for direct reply
             if (status.inReplyToStatusId != -1L) {
-                counterService.increment("services.links.tweets.replies");
+                meterRegistry.counter("services.links.tweets.replies").increment()
                 // no embedded status for replies, so try to retrieve
                 // (status service often hits rate limits, so may discard)
                 statusService.getOrLoadStatus(status.inReplyToStatusId, false, { newToStatus ->
@@ -141,7 +141,7 @@ class LinkService(
 
             // Step 2: Check for retweet
             if (status.retweetedStatus != null) {
-                counterService.increment("services.links.tweets.retweets");
+                meterRegistry.counter("services.links.tweets.retweets").increment()
                 // first: process w/embedded Status
                 handleLink(status, statusLocation, status.retweetedStatus, null, chainCtr)
 
@@ -155,7 +155,7 @@ class LinkService(
 
             // Step 3: Quote
             if (status.quotedStatus != null) {
-                counterService.increment("services.links.tweets.quotes.1");
+                meterRegistry.counter("services.links.tweets.quotes.1").increment()
                 // first: process w/embedded Status
                 handleLink(status, statusLocation, status.quotedStatus, null, chainCtr)
 
@@ -168,7 +168,7 @@ class LinkService(
             } else if (status.quotedStatusId != -1L) {
                 // (may be) no embedded status for quotes, so try to retrieve
                 // (status service often hits rate limits, so may discard)
-                counterService.increment("services.links.tweets.quotes.2");
+                meterRegistry.counter("services.links.tweets.quotes.2").increment()
                 statusService.getOrLoadStatus(status.quotedStatusId, false, { newToStatus ->
                     handleLink(status, statusLocation, newToStatus, null, chainCtr)
                 }, true, true)
@@ -188,7 +188,7 @@ class LinkService(
 
         // chained = tweet-of-a-tweet-of-a-...
         if (chainCtr > 0) {
-            counterService.increment("services.links.tweets.chained");
+            meterRegistry.counter("services.links.tweets.chained").increment()
         }
 
         // it's ok if we only have one, distinct location but we need a link to stash
@@ -200,9 +200,9 @@ class LinkService(
         val nowTime = System.currentTimeMillis()
 
         if (foundToLocation == null) {
-            counterService.increment("services.links.tweets.target.location.unknown");
+            meterRegistry.counter("services.links.tweets.target.location.unknown").increment()
         } else {
-            counterService.increment("services.links.tweets.target.location.known");
+            meterRegistry.counter("services.links.tweets.target.location.known").increment()
         }
 
         // make sure both Status get cached for later
@@ -300,9 +300,9 @@ class LinkService(
                 }
         return conversationCache.computeIfAbsent(conversationKey, { inputKey ->
             if (fromLocation.id == toLocation.id) {
-                counterService.increment("services.links.total.unknown");
+                meterRegistry.counter("services.links.total.unknown").increment()
             } else {
-                counterService.increment("services.links.total.known");
+                meterRegistry.counter("services.links.total.known").increment()
             }
             LinkData(inputKey, fromLocation, toLocation)
         })

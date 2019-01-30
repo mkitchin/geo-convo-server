@@ -4,8 +4,8 @@ import com.opsysinc.learning.data.LinkData
 import com.opsysinc.learning.data.TagType
 import com.opsysinc.learning.data.geojson.Feature
 import com.opsysinc.learning.data.geojson.FeatureCollection
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong
 class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                        val linkService: LinkService,
                        val userService: UserService,
-                       val counterService: CounterService) {
+                       val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -62,7 +62,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         val featureCollection = buildFeatureCollection(maxPublishedLinkAge, maxPublishedLinksPerType, maxPublishedLinksPerType)
 
         if (!featureCollection.features.isEmpty()) {
-            counterService.increment("services.publisher.messages.published")
+            meterRegistry.counter("services.publisher.messages.published").increment()
             logger.info("sendMessage() - features: ${featureCollection.features.size}")
 
             simpMessagingTemplate.convertAndSend("/topic/updates", featureCollection)
@@ -94,17 +94,17 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         val knownFeatureCtr = AtomicLong(0L)
 
         // iterate known (two-way) links and publish
-        run knownLinks@ {
+        run knownLinks@{
             knownLinks.forEach { linkItem ->
                 // publish changed, unpublished links
                 if (if (maxAgeInMs == 0L) {
-                    (linkItem.updatedOn.get() >
-                            linkItem.publishedOn.get())
-                    // or publish according to supplied, max age
-                } else {
-                    (linkItem.updatedOn.get() >
-                            minUpdatedOn)
-                }) {
+                            (linkItem.updatedOn.get() >
+                                    linkItem.publishedOn.get())
+                            // or publish according to supplied, max age
+                        } else {
+                            (linkItem.updatedOn.get() >
+                                    minUpdatedOn)
+                        }) {
                     // if we're change tracking, stash publish time
                     // for later checks (not idempotent)
                     if (maxAgeInMs == 0L) {
@@ -112,7 +112,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     }
 
                     // build line string for known (two-way) link
-                    counterService.increment("services.publisher.links.published")
+                    meterRegistry.counter("services.publisher.links.published").increment()
                     val linkFeature = Feature()
                     featureCollection.features.add(linkFeature)
 
@@ -128,7 +128,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     buildLinkFeatureProperties(linkItem, linkFeature)
 
                     // build first point for known (two-way) link
-                    counterService.increment("services.publisher.ends.published")
+                    meterRegistry.counter("services.publisher.ends.published").increment()
                     val firstFeature = Feature()
                     featureCollection.features.add(firstFeature)
 
@@ -140,7 +140,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     buildLinkFeatureProperties(linkItem, firstFeature, true, false)
 
                     // build second point for known (two-way) link
-                    counterService.increment("services.publisher.ends.published")
+                    meterRegistry.counter("services.publisher.ends.published").increment()
                     val secondFeature = Feature()
                     featureCollection.features.add(secondFeature)
 
@@ -171,17 +171,17 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
         val unknownFeatureCtr = AtomicLong(0L)
 
         // iterate unknown (one-way) links and publish
-        run unknownLinks@ {
+        run unknownLinks@{
             unknownLinks.forEach { linkItem ->
                 // publish changed, unpublished links
                 if (if (maxAgeInMs == 0L) {
-                    (linkItem.updatedOn.get() >
-                            linkItem.publishedOn.get())
-                    // or publish according to supplied, max age
-                } else {
-                    (linkItem.updatedOn.get() >
-                            minUpdatedOn)
-                }) {
+                            (linkItem.updatedOn.get() >
+                                    linkItem.publishedOn.get())
+                            // or publish according to supplied, max age
+                        } else {
+                            (linkItem.updatedOn.get() >
+                                    minUpdatedOn)
+                        }) {
                     // if we're change tracking, stash publish time
                     // for later checks (not idempotent)
                     if (maxAgeInMs == 0L) {
@@ -189,7 +189,7 @@ class PublisherService(val simpMessagingTemplate: SimpMessagingTemplate,
                     }
 
                     // build point for unknown (one-way) link
-                    counterService.increment("services.publisher.points.published")
+                    meterRegistry.counter("services.publisher.points.published").increment()
                     val pointFeature = Feature()
                     featureCollection.features.add(pointFeature)
 

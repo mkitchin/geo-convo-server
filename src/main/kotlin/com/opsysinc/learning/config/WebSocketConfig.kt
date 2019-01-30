@@ -15,7 +15,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry
  */
 @Configuration
 @EnableWebSocketMessageBroker
-open class WebSocketConfig : AbstractWebSocketMessageBrokerConfigurer() {
+class WebSocketConfig : AbstractWebSocketMessageBrokerConfigurer() {
     override fun configureMessageBroker(config: MessageBrokerRegistry?) {
         // enable queue and topic (outbound) prefixes
         config!!.enableSimpleBroker("/queue", "/topic")

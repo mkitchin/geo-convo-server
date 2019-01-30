@@ -2,7 +2,7 @@ package com.opsysinc.learning.controller
 
 import com.opsysinc.learning.data.message.StartupMessage
 import com.opsysinc.learning.service.PublisherService
-import org.springframework.boot.actuate.metrics.CounterService
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Controller
@@ -15,9 +15,9 @@ import org.springframework.stereotype.Controller
  * Created by mkitchin on 5/13/2017.
  */
 @Controller
-open class AppController(val simpMessagingTemplate: SimpMessagingTemplate,
-                         val publisherService: PublisherService,
-                         val counterService: CounterService) {
+class AppController(val simpMessagingTemplate: SimpMessagingTemplate,
+                    val publisherService: PublisherService,
+                    val meterRegistry: MeterRegistry) {
     /**
      * Oldest link to send to clients at startup.
      */
@@ -36,7 +36,7 @@ open class AppController(val simpMessagingTemplate: SimpMessagingTemplate,
     @MessageMapping("/startup")
     @Throws(Exception::class)
     fun appStartup(startupMessage: StartupMessage) {
-        counterService.increment("services.appcontroller.requests.startup")
+        meterRegistry.counter("services.appcontroller.requests.startup").increment()
         this.simpMessagingTemplate.convertAndSend(
                 "/queue/${startupMessage.id}",
                 publisherService.buildFeatureCollection(maxStartupLinkAge, maxStartupLinksPerType, maxStartupLinksPerType))

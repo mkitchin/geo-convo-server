@@ -2,6 +2,7 @@ package com.opsysinc.learning.service
 
 import com.opsysinc.learning.data.LocationData
 import com.opsysinc.learning.util.LRUCache
+import io.micrometer.core.instrument.MeterRegistry
 import org.geotools.data.DataStoreFinder
 import org.geotools.data.simple.SimpleFeatureSource
 import org.geotools.filter.text.ecql.ECQL
@@ -9,7 +10,6 @@ import org.opengis.feature.simple.SimpleFeature
 import org.opengis.filter.Filter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.stereotype.Service
 import twitter4j.GeoLocation
 import twitter4j.Place
@@ -25,7 +25,7 @@ import kotlin.collections.LinkedHashSet
  * Created by mkitchin on 5/13/2017.
  */
 @Service
-class LocationsService(val counterService: CounterService) {
+class LocationsService(val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -59,7 +59,7 @@ class LocationsService(val counterService: CounterService) {
         params.put("memory mapped buffer", true)
 
         val dataStore = DataStoreFinder.getDataStore(params)
-        val localFeatureSource = dataStore.getFeatureSource(placeBufferName);
+        val localFeatureSource = dataStore.getFeatureSource(placeBufferName)
         featureSource = localFeatureSource
     }
 
@@ -86,13 +86,13 @@ class LocationsService(val counterService: CounterService) {
         return locationByFilterCache.computeIfAbsent(filterText, { cacheKey ->
             val featureCollection = featureSource!!.getFeatures(getEcqlFilter(cacheKey))
             if (featureCollection.isEmpty) {
-                counterService.increment("services.locations.total.unknown")
+                meterRegistry.counter("services.locations.total.unknown").increment()
                 null
             } else {
                 val featureIterator = featureCollection.features()
                 try {
                     val newLocation = getLocationByFeature(featureIterator.next())
-                    counterService.increment("services.locations.total.known")
+                    meterRegistry.counter("services.locations.total.known").increment()
                     newLocation
                 } finally {
                     featureIterator.close()
@@ -103,7 +103,7 @@ class LocationsService(val counterService: CounterService) {
 
     fun getLocationByFeature(simpleFeature: SimpleFeature): LocationData? {
         return locationByFeatureCache.computeIfAbsent(simpleFeature.id!!, { cacheKey ->
-            counterService.increment("services.location.features.known")
+            meterRegistry.counter("services.location.features.known").increment()
             val nameSet: MutableSet<String> = LinkedHashSet()
 
             val foundName = simpleFeature.getAttribute("NAME").toString()
@@ -133,7 +133,7 @@ class LocationsService(val counterService: CounterService) {
         return filterCache.computeIfAbsent(
                 ecqlFilterText,
                 { inputCacheKey ->
-                    counterService.increment("services.location.filters")
+                    meterRegistry.counter("services.location.filters").increment()
                     ECQL.toFilter(inputCacheKey)
                 })
     }

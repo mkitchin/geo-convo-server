@@ -1,8 +1,8 @@
 package com.opsysinc.learning.service
 
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.stereotype.Service
 import twitter4j.RateLimitStatus
 import twitter4j.Twitter
@@ -23,10 +23,10 @@ import javax.annotation.PostConstruct
  *
  * Created by mkitchin on 5/13/2017.
  *
- * @param counterService Counter service.
+ * @param meterRegistry Counter service.
  */
 @Service
-class TwitterService(val counterService: CounterService) {
+class TwitterService(val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -144,7 +144,7 @@ class TwitterService(val counterService: CounterService) {
 
                 if (waitTimeInMs > 0L) {
                     logger.info("checkRateLimiting() - group: $group, resource: $resource, wait start: ${waitTimeInMs}ms")
-                    counterService.increment("services.twitter.limit.waits")
+                    meterRegistry.counter("services.twitter.limit.waits").increment()
                     Thread.sleep(waitTimeInMs)
                     logger.info("checkRateLimiting() - group: $group, resource: $resource, wait stop")
                 }

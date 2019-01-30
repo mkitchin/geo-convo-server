@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
  */
 @SpringBootApplication
 @EnableScheduling
-open class GeoConvoServerApplication {
+class GeoConvoServerApplication {
     /**
      * Logger.
      */

@@ -1,8 +1,8 @@
 package com.opsysinc.learning.service
 
 import com.opsysinc.learning.util.LRUCache
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
-import org.springframework.boot.actuate.metrics.CounterService
 import org.springframework.stereotype.Service
 import twitter4j.Status
 import java.util.*
@@ -24,12 +24,12 @@ import java.util.concurrent.atomic.AtomicLong
  * Created by mkitchin on 5/13/2017.
  *
  * @param twitterServce Twitter service via service injection.
- * @param counterService SB counter service via service injection.
+ * @param meterRegistry SB counter service via service injection.
  */
 @Service
 class StatusService(val twitterServce: TwitterService,
                     val userService: UserService,
-                    val counterService: CounterService) {
+                    val meterRegistry: MeterRegistry) {
     /**
      * Logger.
      */
@@ -142,12 +142,12 @@ class StatusService(val twitterServce: TwitterService,
                 } else {
                     val cachedStatus = getStatus(statusId)
                     if (cachedStatus != null) {
-                        counterService.increment("services.status.request.cached")
+                        meterRegistry.counter("services.status.request.cached").increment()
                     }
                     cachedStatus
                 }
         if (toStatus1 == null) {
-            counterService.increment("services.status.request.enqueued")
+            meterRegistry.counter("services.status.request.enqueued").increment()
             lookupExecutor.submit({
                 try {
                     var toStatus2: Status? =
@@ -156,7 +156,7 @@ class StatusService(val twitterServce: TwitterService,
                             } else {
                                 val cachedStatus = getStatus(statusId)
                                 if (cachedStatus != null) {
-                                    counterService.increment("services.status.request.cached")
+                                    meterRegistry.counter("services.status.request.cached").increment()
                                 }
                                 cachedStatus
                             }
@@ -172,7 +172,7 @@ class StatusService(val twitterServce: TwitterService,
                             if ((statusTotal % 100L) == 0L) {
                                 logger.info("getOrLoadStatus() - status total: $statusTotal")
                             }
-                            counterService.increment("services.status.request.loaded")
+                            meterRegistry.counter("services.status.request.loaded").increment()
                             addStatus(toStatus3, isCacheOther, isCacheUsers)
                         }
                     }
