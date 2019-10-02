@@ -34,20 +34,20 @@ You'll need to [create a Twitter app](https://apps.twitter.com/) (quick/free), t
 Twitter app management page with the important parts highlighted:
 ![alt text](doc/twitter-app-setup-1.png "Twitter app setup #1")
 
-## Create Mabpox Account
- 
+## Create Mapbox Account
+
 You'll need to [create a Mapbox account](https://www.mapbox.com/signup/) (quick/free), then get a public token to run the software.  
 
 Mapbox account management page with the important parts highlighted:
 ![alt text](doc/mapbox-account-setup-1.png "Mapbox account setup #1")
- 
+
 # Building
 
 ## Perquisites
 
 ### Update src/main/resources/application.yml
 Fill out Twitter keys/secrets obtained above, per instructions at top of file.
- 
+
 ### Update src/main/resources/static/app.js
 Fill out Mapbox token obtained above, per instructions at top of file.
 
@@ -76,7 +76,7 @@ target/geo-convo-server-0.0.1-SNAPSHOT.jar
 # Deploying
 1. Copy generated JAR file to wherever it's to be deployed.
 1. Copy `data` folder to to the same location.
-1. (Optionally) Copy `appplication.yml`, referenced above to the same location to override embedded settings (e.g., Twitter keys/secrets).
+1. (Optionally) Copy `application.yml`, referenced above to the same location to override embedded settings (e.g., Twitter keys/secrets).
 
 # Running
 In bash/cmd:
@@ -96,7 +96,7 @@ Navigate to the following URL:
 http://localhost:8080
 ```
 
-If all tokens/secrets have been set correctly, the map will be visible and coversations will begin to appear within a minute (expect >60/min, bandwidth depending).
+If all tokens/secrets have been set correctly, the map will be visible and conversations will begin to appear within a minute (expect >60/min, bandwidth depending).
 
 # Metrics
 Metrics (e.g., total received Tweets) in JSON form may be obtained via the following URL:
@@ -114,7 +114,7 @@ Example:
   "mem.free": 678824,
   "processors": 12,
   "instance.uptime": 771214,
-  
+
 // [...]
 
   "counter.services.publisher.points.published": 1654,
@@ -145,12 +145,12 @@ Example:
 ```
 
 # Geospatial Bucketing
-In an effort to collate Tweets to/from from approximate locations I used the Natural Earth Populated Places dataset and qGIS to generate the following Voronoi (Thiessen) polygons:
+In an effort to collate Tweets to/from approximate locations I used the Natural Earth Populated Places dataset and qGIS to generate the following Voronoi (Thiessen) polygons:
 ![alt text](doc/location-polygons-1.png "Mapbox account setup #1")
 
 This represents ~2000 cities from the original dataset, selected by `SCALERANK` and `RANK_MIN` (population) values.  
 
-The `LocationsService` in the software matches Tweet locations against these polygons, then groups matched Tweets at the latitude/logitude of the related city.
+The `LocationsService` in the software matches Tweet locations against these polygons, then groups matched Tweets at the latitude/longitude of the related city.
 
 These polygons are stored in a shapefile referenced in the `application.yml` file and may be modified to provide differently-distributed circles and link endpoints.  
 
